@@ -12,6 +12,7 @@
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
+        ShowActivated="False"
         ShowInTaskbar="False"
         WindowStartupLocation="Manual"
         Focusable="True"

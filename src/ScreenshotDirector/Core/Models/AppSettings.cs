@@ -49,7 +49,7 @@ public class AppSettings
     public string DefaultFormat { get; set; } = "PNG";
 
     [JsonPropertyName("copySavedPathToClipboard")]
-    public bool CopySavedPathToClipboard { get; set; } = true;
+    public bool CopySavedPathToClipboard { get; set; } = false;
 
     [JsonPropertyName("allowQuickRename")]
     public bool AllowQuickRename { get; set; } = true;

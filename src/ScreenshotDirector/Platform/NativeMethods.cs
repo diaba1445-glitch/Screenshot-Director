@@ -119,7 +119,8 @@ public static class NativeMethods
 
         return procName.Equals("SnippingTool", StringComparison.OrdinalIgnoreCase) ||
                procName.Equals("mspaint", StringComparison.OrdinalIgnoreCase) ||
-               procName.Equals("PaintApp", StringComparison.OrdinalIgnoreCase);
+               procName.Equals("PaintApp", StringComparison.OrdinalIgnoreCase) ||
+               procName.Equals("ScreenClippingHost", StringComparison.OrdinalIgnoreCase); // Win+Shift+S overlay
     }
 
     [StructLayout(LayoutKind.Sequential)]

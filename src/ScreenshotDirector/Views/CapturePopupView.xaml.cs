@@ -39,21 +39,25 @@ public partial class CapturePopupView : Window
             return;
         }
 
-        // Also check after a brief delay in case the editor is launching from a notification click
-        Task.Delay(150).ContinueWith(_ =>
+        // The editor can take over a second to appear after a notification click, so poll briefly.
+        _ = WatchForEditorAsync();
+    }
+
+    private async Task WatchForEditorAsync()
+    {
+        try
         {
-            try
+            for (int i = 0; i < 15 && !_isClosing; i++)
             {
-                Dispatcher.Invoke(() =>
+                await Task.Delay(100);
+                if (!_isClosing && NativeMethods.IsForegroundMarkupEditor())
                 {
-                    if (!_isClosing && NativeMethods.IsForegroundMarkupEditor())
-                    {
-                        AnimateClose();
-                    }
-                });
+                    AnimateClose();
+                    return;
+                }
             }
-            catch { }
-        });
+        }
+        catch { }
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

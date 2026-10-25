@@ -17,7 +17,6 @@ public class CaptureDetectionService : ICaptureDetectionService
     private string _lastFingerprint = string.Empty;
     private DateTimeOffset _lastFingerprintTime = DateTimeOffset.MinValue;
     private bool _isPaused;
-    private bool _isProcessing;
 
     private static readonly TimeSpan DuplicateCooldown = TimeSpan.FromSeconds(2.0);
     private const int DebounceDelayMs = 250;
@@ -186,13 +185,6 @@ public class CaptureDetectionService : ICaptureDetectionService
                 _logger.Debug($"Discarding stale clipboard processing: gen {expectedGen} != current {_generationCounter}");
                 return;
             }
-
-            if (_isProcessing)
-            {
-                _logger.Debug("Skipping clipboard update: candidate processing already in progress.");
-                return;
-            }
-            _isProcessing = true;
         }
 
         try
@@ -248,13 +240,6 @@ public class CaptureDetectionService : ICaptureDetectionService
         catch (Exception ex)
         {
             _logger.Error("Error processing clipboard event", ex);
-        }
-        finally
-        {
-            lock (_stateLock)
-            {
-                _isProcessing = false;
-            }
         }
     }
 

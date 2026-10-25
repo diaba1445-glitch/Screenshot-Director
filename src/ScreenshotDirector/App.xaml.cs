@@ -27,6 +27,7 @@ public partial class App : System.Windows.Application
     private readonly object _popupLock = new();
 
     private CaptureCandidate? _deferredEditorCandidate;
+    private DateTime? _editorLostFocusAt;
     private System.Windows.Threading.DispatcherTimer? _editorWatcherTimer;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -184,8 +185,17 @@ public partial class App : System.Windows.Application
             // If the editor is still in the foreground, continue waiting for the user to finish
             if (NativeMethods.IsForegroundMarkupEditor())
             {
+                _editorLostFocusAt = null;
                 return;
             }
+
+            // Require ~500ms off the editor so a quick alt-tab doesn't pop up a half-finished edit
+            _editorLostFocusAt ??= DateTime.UtcNow;
+            if (DateTime.UtcNow - _editorLostFocusAt < TimeSpan.FromMilliseconds(500))
+            {
+                return;
+            }
+            _editorLostFocusAt = null;
 
             // Editor is no longer the foreground window (user finished annotating, closed, or switched away)
             StopEditorWatcherTimer();
@@ -234,8 +244,8 @@ public partial class App : System.Windows.Application
         };
 
         _activePopup = popup;
+        // ShowActivated=False: don't steal focus from the app the user is about to paste into.
         popup.Show();
-        popup.Activate();
     }
 
     private void OpenMainWindow()
