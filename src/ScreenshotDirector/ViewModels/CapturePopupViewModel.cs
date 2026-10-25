@@ -71,6 +71,10 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
     public PopupPosition Position => _settingsService?.CurrentSettings?.PopupPosition ?? PopupPosition.BottomRight;
 
+    public PopupThemeMode ThemeMode => _settingsService?.CurrentSettings?.PopupThemeMode ?? PopupThemeMode.LightGlass;
+    public bool IsLightGlass => ThemeMode == PopupThemeMode.LightGlass;
+    public bool IsDarkGlass => ThemeMode == PopupThemeMode.DarkGlass;
+
     public string DefaultFilename
     {
         get => _defaultFilename;
@@ -252,6 +256,14 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public void ResumeTimer()
     {
         IsTimerPaused = false;
+    }
+
+    public void ToggleTimerPause()
+    {
+        if (IsTimerPaused)
+            ResumeTimer();
+        else
+            PauseTimer();
     }
 
     public void ExpandToFullList()

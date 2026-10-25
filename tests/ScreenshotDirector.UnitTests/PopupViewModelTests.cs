@@ -302,26 +302,34 @@ public class PopupViewModelTests : IDisposable
     }
 
     [Fact]
-    public void CapturePopupView_InstantiatesAndRendersVisualTree_WithoutExceptions()
+    public void CapturePopupView_InstantiatesAndRendersVisualTree_InBothLightAndDarkModes_WithoutExceptions()
     {
         StaTestHelper.RunInSta(() =>
         {
-            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
-            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
-
-            var popup = new ScreenshotDirector.Views.CapturePopupView
+            foreach (var mode in new[] { PopupThemeMode.LightGlass, PopupThemeMode.DarkGlass })
             {
-                DataContext = vm
-            };
+                _settingsService.CurrentSettings.PopupThemeMode = mode;
+                var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+                vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
 
-            popup.Measure(new System.Windows.Size(440, 500));
-            popup.Arrange(new System.Windows.Rect(0, 0, 440, 500));
-            popup.UpdateLayout();
+                Assert.Equal(mode, vm.ThemeMode);
+                Assert.Equal(mode == PopupThemeMode.LightGlass, vm.IsLightGlass);
+                Assert.Equal(mode == PopupThemeMode.DarkGlass, vm.IsDarkGlass);
 
-            Assert.NotNull(popup);
-            Assert.True(popup.ActualWidth >= 0);
+                var popup = new ScreenshotDirector.Views.CapturePopupView
+                {
+                    DataContext = vm
+                };
 
-            popup.Close();
+                popup.Measure(new System.Windows.Size(460, 500));
+                popup.Arrange(new System.Windows.Rect(0, 0, 460, 500));
+                popup.UpdateLayout();
+
+                Assert.NotNull(popup);
+                Assert.True(popup.ActualWidth >= 0);
+
+                popup.Close();
+            }
         });
     }
 }

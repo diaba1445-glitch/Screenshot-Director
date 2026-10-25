@@ -41,6 +41,7 @@ public class MainControlViewModel : INotifyPropertyChanged
     private string _defaultFilenamePattern = "Screenshot_yyyy-MM-dd_HH-mm-ss.png";
     private bool _genericImageFallbackEnabled;
     private PopupPosition _popupPosition = PopupPosition.BottomRight;
+    private PopupThemeMode _popupThemeMode = PopupThemeMode.LightGlass;
     private DestinationEditItem? _selectedDestination;
     private string _statusMessage = string.Empty;
     private bool _isDetectionPaused;
@@ -113,6 +114,32 @@ public class MainControlViewModel : INotifyPropertyChanged
         PopupPosition.BottomCenter,
         PopupPosition.CursorAdjacent
     };
+
+    public PopupThemeMode PopupThemeMode
+    {
+        get => _popupThemeMode;
+        set
+        {
+            if (_popupThemeMode != value)
+            {
+                _popupThemeMode = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsPopupThemeLight));
+                OnPropertyChanged(nameof(IsPopupThemeDark));
+            }
+        }
+    }
+
+    public bool IsPopupThemeLight => PopupThemeMode == PopupThemeMode.LightGlass;
+    public bool IsPopupThemeDark => PopupThemeMode == PopupThemeMode.DarkGlass;
+
+    public void SetPopupTheme(PopupThemeMode mode)
+    {
+        PopupThemeMode = mode;
+        StatusMessage = mode == PopupThemeMode.LightGlass
+            ? "Popup theme set to Light Glass (frosted crystal)."
+            : "Popup theme set to Dark Glass (smoked acrylic).";
+    }
 
     public string DefaultFilenamePattern
     {
@@ -443,6 +470,7 @@ public class MainControlViewModel : INotifyPropertyChanged
         DefaultFilenamePattern = settings.DefaultFilenamePattern;
         GenericImageFallbackEnabled = settings.GenericImageFallbackEnabled;
         PopupPosition = settings.PopupPosition;
+        PopupThemeMode = settings.PopupThemeMode;
 
         Destinations.Clear();
         foreach (var dest in settings.Destinations.OrderBy(d => d.ShortcutNumber))
@@ -663,6 +691,7 @@ public class MainControlViewModel : INotifyPropertyChanged
                 DefaultFilenamePattern = DefaultFilenamePattern,
                 GenericImageFallbackEnabled = GenericImageFallbackEnabled,
                 PopupPosition = PopupPosition,
+                PopupThemeMode = PopupThemeMode,
                 ClipboardDetectionMode = GenericImageFallbackEnabled
                     ? ClipboardDetectionMode.GenericFallback
                     : ClipboardDetectionMode.Conservative,

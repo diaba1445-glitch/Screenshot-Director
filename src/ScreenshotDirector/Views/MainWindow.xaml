@@ -229,6 +229,30 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Theme Mode Card RadioButton Style -->
+        <Style x:Key="ThemeOptionRadioStyle" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="optBorder" Background="#1B192A" BorderBrush="#2C2642" BorderThickness="1.5" CornerRadius="8" Padding="14,12">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="optBorder" Property="Background" Value="#231F36"/>
+                                <Setter TargetName="optBorder" Property="BorderBrush" Value="#4C3E75"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="optBorder" Property="Background" Value="#241B42"/>
+                                <Setter TargetName="optBorder" Property="BorderBrush" Value="#8B5CF6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Dark ComboBox Template -->
         <ControlTemplate x:Key="DarkComboBoxTemplate" TargetType="ComboBox">
             <Grid x:Name="MainGrid" SnapsToDevicePixels="True">
@@ -780,6 +804,68 @@
                                     <Button Content="✕ Clear" Click="OnClearSessionDefaultClick" Style="{StaticResource DangerButtonStyle}" IsEnabled="{Binding HasSessionDefault}"/>
                                 </StackPanel>
                             </Grid>
+                        </Border>
+
+                        <!-- Liquid Frosted Glass Theme Selection Card -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="✨ Liquid Frosted Glass Appearance" FontWeight="SemiBold" Foreground="#DDD6FE" FontSize="13"/>
+                                    <Border Background="#1C283F" BorderBrush="#38BDF8" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="macOS Style" FontSize="10" FontWeight="SemiBold" Foreground="#7DD3FC"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Choose the frosted glass aesthetic for the screenshot routing popup window on your desktop:" 
+                                           Foreground="#8E8A9F" FontSize="11" Margin="0,0,0,12"/>
+
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Light Glass Option -->
+                                    <RadioButton Grid.Column="0" GroupName="PopupGlassThemeGroup"
+                                                 IsChecked="{Binding IsPopupThemeLight, Mode=OneWay}"
+                                                 Click="OnSetLightGlassThemeClick"
+                                                 Style="{StaticResource ThemeOptionRadioStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" Margin="0,0,12,0">
+                                                <TextBlock Text="☀️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="Light Glass (Crystal)" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                                <TextBlock Text="Frosted crystal glass with macOS soft blue folder accents" FontSize="10" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </RadioButton>
+
+                                    <!-- Dark Glass Option -->
+                                    <RadioButton Grid.Column="2" GroupName="PopupGlassThemeGroup"
+                                                 IsChecked="{Binding IsPopupThemeDark, Mode=OneWay}"
+                                                 Click="OnSetDarkGlassThemeClick"
+                                                 Style="{StaticResource ThemeOptionRadioStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" Background="#0F0E17" BorderBrush="#352D4E" BorderThickness="1" Margin="0,0,12,0">
+                                                <TextBlock Text="🌙" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="Dark Glass (Smoked)" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
+                                                <TextBlock Text="Smoked translucent acrylic with deep purple folder accents" FontSize="10" Foreground="#94A3B8" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </RadioButton>
+                                </Grid>
+                            </StackPanel>
                         </Border>
 
                         <!-- Screen Position & Auto-Dismiss -->

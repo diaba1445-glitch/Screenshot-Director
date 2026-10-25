@@ -259,6 +259,41 @@ public class MainControlViewModelTests : IDisposable
             window.Close();
         });
     }
+
+    [Fact]
+    public async Task SetPopupTheme_SwitchesThemeModeAndPersists()
+    {
+        var vm = new MainControlViewModel(_settingsService, _startupManager, _detectionService, null, _logger);
+
+        // Default should be LightGlass
+        Assert.Equal(PopupThemeMode.LightGlass, vm.PopupThemeMode);
+        Assert.True(vm.IsPopupThemeLight);
+        Assert.False(vm.IsPopupThemeDark);
+
+        // Switch to DarkGlass
+        vm.SetPopupTheme(PopupThemeMode.DarkGlass);
+        Assert.Equal(PopupThemeMode.DarkGlass, vm.PopupThemeMode);
+        Assert.False(vm.IsPopupThemeLight);
+        Assert.True(vm.IsPopupThemeDark);
+
+        // Save settings and reload from disk
+        var saved = await vm.SaveAsync();
+        Assert.True(saved);
+
+        var freshSettingsService = new SettingsService(_logger, Path.Combine(_tempDir, "settings.json"));
+        var reloadedSettings = await freshSettingsService.LoadSettingsAsync();
+        Assert.Equal(PopupThemeMode.DarkGlass, reloadedSettings.PopupThemeMode);
+
+        // Switch back to LightGlass
+        vm.SetPopupTheme(PopupThemeMode.LightGlass);
+        Assert.Equal(PopupThemeMode.LightGlass, vm.PopupThemeMode);
+        Assert.True(vm.IsPopupThemeLight);
+        Assert.False(vm.IsPopupThemeDark);
+
+        await vm.SaveAsync();
+        var reloadedSettings2 = await freshSettingsService.LoadSettingsAsync();
+        Assert.Equal(PopupThemeMode.LightGlass, reloadedSettings2.PopupThemeMode);
+    }
 }
 
 

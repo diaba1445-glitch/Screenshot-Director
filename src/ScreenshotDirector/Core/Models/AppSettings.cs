@@ -22,6 +22,12 @@ public enum PopupPosition
     CursorAdjacent
 }
 
+public enum PopupThemeMode
+{
+    LightGlass,
+    DarkGlass
+}
+
 public class AppSettings
 {
     [JsonPropertyName("schemaVersion")]
@@ -65,6 +71,10 @@ public class AppSettings
     [JsonPropertyName("popupPosition")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public PopupPosition PopupPosition { get; set; } = PopupPosition.BottomRight;
+
+    [JsonPropertyName("popupThemeMode")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PopupThemeMode PopupThemeMode { get; set; } = PopupThemeMode.LightGlass;
 
     [JsonPropertyName("destinations")]
     public List<DestinationFolder> Destinations { get; set; } = new();

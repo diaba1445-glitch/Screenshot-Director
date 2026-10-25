@@ -31,6 +31,13 @@ public partial class CapturePopupView : Window
         var pos = ViewModel?.Position ?? PopupPosition.BottomRight;
         PositionOnScreen(pos);
 
+        try
+        {
+            var helper = new System.Windows.Interop.WindowInteropHelper(this);
+            WindowBlurHelper.EnableBlur(helper.Handle, ViewModel?.IsLightGlass ?? true);
+        }
+        catch { }
+
         if (ViewModel != null)
         {
             ViewModel.RequestClose += (s, args) => AnimateClose();
@@ -251,6 +258,11 @@ public partial class CapturePopupView : Window
         {
             AnimateClose();
         }
+    }
+
+    private void OnTogglePauseClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.ToggleTimerPause();
     }
 
     private async void OnDestinationClick(object sender, RoutedEventArgs e)

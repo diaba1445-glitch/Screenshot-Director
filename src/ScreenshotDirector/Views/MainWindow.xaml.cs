@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using ScreenshotDirector.Core.Models;
 using ScreenshotDirector.ViewModels;
 
 namespace ScreenshotDirector.Views;
@@ -179,6 +180,16 @@ public partial class MainWindow : Window
     private void OnClearSessionDefaultClick(object sender, RoutedEventArgs e)
     {
         ViewModel?.ClearSessionDefault();
+    }
+
+    private void OnSetLightGlassThemeClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SetPopupTheme(PopupThemeMode.LightGlass);
+    }
+
+    private void OnSetDarkGlassThemeClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SetPopupTheme(PopupThemeMode.DarkGlass);
     }
 
     private void OnClearRecentCapturesClick(object sender, RoutedEventArgs e)
