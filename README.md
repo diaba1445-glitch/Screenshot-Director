@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Screenshot Director Logo" width="160" height="160" style="border-radius: 28px;" />
+  <img src="assets/logo.png" alt="Screenshot Director Logo" width="360" style="max-width: 100%; height: auto; border-radius: 32px; box-shadow: 0 16px 40px rgba(0,0,0,0.6);" />
 </p>
 
 <h1 align="center">Screenshot Director</h1>
@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.0/ScreenshotDirector-v1.0.0-win-x64.zip"><img src="https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.0-7C3AED?style=for-the-badge&logo=windows&logoColor=white" alt="Download v1.0.0" /></a>
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest"><img src="https://img.shields.io/github/v/release/diaba1445-glitch/Screenshot-Director?style=for-the-badge&color=8B5CF6" alt="Release" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases"><img src="https://img.shields.io/badge/Release-v1.0.0-8B5CF6?style=for-the-badge" alt="Release v1.0.0" /></a>
   <a href="https://github.com/diaba1445-glitch/Screenshot-Director"><img src="https://img.shields.io/badge/Tests-54%20Passing-10B981?style=for-the-badge" alt="Tests" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
 </p>
