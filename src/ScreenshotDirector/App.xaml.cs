@@ -195,6 +195,7 @@ public partial class App : System.Windows.Application
                 {
                     DataContext = vm
                 };
+                MainWindow = _mainWindow;
                 _mainWindow.Closed += (s, e) => _mainWindow = null;
                 _mainWindow.Show();
                 _mainWindow.WindowState = WindowState.Normal;
@@ -202,6 +203,7 @@ public partial class App : System.Windows.Application
                 _mainWindow.Topmost = true;
                 _mainWindow.Topmost = false;
                 _mainWindow.Focus();
+                _logger?.Info("MainWindow displayed and focused successfully.");
             }
             catch (Exception ex)
             {
