@@ -167,7 +167,7 @@ public partial class App : System.Windows.Application
         {
             try
             {
-                if (_mainWindow != null && _mainWindow.IsLoaded)
+                if (_mainWindow != null)
                 {
                     if (_mainWindow.Visibility != Visibility.Visible)
                     {
@@ -177,6 +177,7 @@ public partial class App : System.Windows.Application
                     var existingHwnd = new System.Windows.Interop.WindowInteropHelper(_mainWindow).Handle;
                     if (existingHwnd != IntPtr.Zero)
                     {
+                        NativeMethods.ShowWindow(existingHwnd, NativeMethods.SW_SHOW);
                         NativeMethods.ShowWindow(existingHwnd, NativeMethods.SW_RESTORE);
                         NativeMethods.SetForegroundWindow(existingHwnd);
                     }

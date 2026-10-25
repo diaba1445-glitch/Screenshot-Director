@@ -258,12 +258,14 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     {
         _isPointerOverWindow = true;
         UpdateTimerPausedState();
+        _logger.Debug($"Pointer entered popup - countdown timer paused (remaining: {_remainingTimeMs}ms).");
     }
 
     public void OnPointerLeaveWindow()
     {
         _isPointerOverWindow = false;
         UpdateTimerPausedState();
+        _logger.Debug($"Pointer left popup - countdown timer resumed (remaining: {_remainingTimeMs}ms).");
     }
 
     public void SetEditingFilename(bool isEditing)

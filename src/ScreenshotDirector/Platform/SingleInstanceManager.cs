@@ -73,6 +73,7 @@ public class SingleInstanceManager : ISingleInstanceManager
     {
         try
         {
+            NativeMethods.AllowSetForegroundWindow(NativeMethods.ASFW_ANY);
             if (EventWaitHandle.TryOpenExisting(_eventName, out var existingEvent))
             {
                 using (existingEvent)

@@ -169,7 +169,9 @@
     </Window.Resources>
 
     <!-- Outer Glass Shell with Hardware Acrylic Backdrop & Ambient Shadow -->
-    <Border x:Name="MainGlassBorder" CornerRadius="16" Margin="12">
+    <Border x:Name="MainGlassBorder" CornerRadius="16" Margin="12"
+            MouseEnter="OnWindowMouseEnter"
+            MouseLeave="OnWindowMouseLeave">
         <Border.Style>
             <Style TargetType="Border">
                 <Setter Property="Background" Value="#E612101F"/>
