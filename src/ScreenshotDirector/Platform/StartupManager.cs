@@ -37,10 +37,11 @@ public class StartupManager : IStartupManager
     {
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, true);
+            using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath, true);
             if (key == null)
             {
-                _logger.Warning("Unable to open HKCU Run key for write access.");
+                if (!enable) return true;
+                _logger.Warning("Unable to open or create HKCU Run key for write access.");
                 return false;
             }
 

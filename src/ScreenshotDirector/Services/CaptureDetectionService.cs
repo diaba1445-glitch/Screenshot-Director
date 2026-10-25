@@ -100,12 +100,26 @@ public class CaptureDetectionService : ICaptureDetectionService
         }
 
         _logger.Info($"Test capture triggered: {candidate.Width}x{candidate.Height}");
-        if (Application.Current != null)
+        if (Application.Current != null && !Application.Current.Dispatcher.HasShutdownStarted && !Application.Current.Dispatcher.HasShutdownFinished)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            try
+            {
+                if (Application.Current.Dispatcher.CheckAccess())
+                {
+                    ScreenshotDetected?.Invoke(this, candidate);
+                }
+                else
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ScreenshotDetected?.Invoke(this, candidate);
+                    });
+                }
+            }
+            catch
             {
                 ScreenshotDetected?.Invoke(this, candidate);
-            });
+            }
         }
         else
         {

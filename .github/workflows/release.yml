@@ -23,7 +23,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Run Tests
-        run: dotnet test .\ScreenshotDirector.sln -c Release
+        run: dotnet test .\ScreenshotDirector.sln -c Release --logger "console;verbosity=normal"
 
       - name: Publish Single-File Executable (win-x64)
         run: >
