@@ -332,6 +332,51 @@ public class PopupViewModelTests : IDisposable
             }
         });
     }
+
+    [Fact]
+    public void PointerHover_PausesTimerOnEnter_AndResumesOnLeave()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            Assert.False(vm.IsTimerPaused);
+
+            // Mouse moves over window -> timer should pause
+            vm.OnPointerEnterWindow();
+            Assert.True(vm.IsTimerPaused);
+
+            // Mouse moves away -> timer should resume
+            vm.OnPointerLeaveWindow();
+            Assert.False(vm.IsTimerPaused);
+        });
+    }
+
+    [Fact]
+    public void PointerHover_WithActiveEditing_StaysPausedUntilEditingEnds()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            // Pointer enters and user begins editing
+            vm.OnPointerEnterWindow();
+            Assert.True(vm.IsTimerPaused);
+
+            vm.SetEditingFilename(true);
+            Assert.True(vm.IsTimerPaused);
+
+            // Mouse moves outside the window while editing is active -> timer remains paused
+            vm.OnPointerLeaveWindow();
+            Assert.True(vm.IsTimerPaused);
+
+            // Once editing finishes (lost focus) -> timer resumes
+            vm.SetEditingFilename(false);
+            Assert.False(vm.IsTimerPaused);
+        });
+    }
 }
 
 

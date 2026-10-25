@@ -62,6 +62,9 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private string _statusMessage = string.Empty;
     private string _errorMessage = string.Empty;
     private bool _isTimerPaused;
+    private bool _isPointerOverWindow;
+    private bool _isEditingFilename;
+    private bool _isManuallyPaused;
     private bool _isCollapsed;
     private bool _setAsSessionDefaultOnSave;
 
@@ -215,6 +218,9 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
         DefaultFilename = _saveService.GenerateDefaultFilename(settings.DefaultFilenamePattern);
         Filename = string.Empty; // Start empty as requested!
+        _isPointerOverWindow = false;
+        _isEditingFilename = false;
+        _isManuallyPaused = false;
         IsTimerPaused = false;
         SetAsSessionDefaultOnSave = false;
 
@@ -248,14 +254,35 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
     public bool HasNoDestinations => Destinations.Count == 0;
 
+    public void OnPointerEnterWindow()
+    {
+        _isPointerOverWindow = true;
+        UpdateTimerPausedState();
+    }
+
+    public void OnPointerLeaveWindow()
+    {
+        _isPointerOverWindow = false;
+        UpdateTimerPausedState();
+    }
+
+    public void SetEditingFilename(bool isEditing)
+    {
+        _isEditingFilename = isEditing;
+        UpdateTimerPausedState();
+    }
+
     public void PauseTimer()
     {
-        IsTimerPaused = true;
+        _isManuallyPaused = true;
+        UpdateTimerPausedState();
     }
 
     public void ResumeTimer()
     {
-        IsTimerPaused = false;
+        _isManuallyPaused = false;
+        _isEditingFilename = false;
+        UpdateTimerPausedState();
     }
 
     public void ToggleTimerPause()
@@ -264,6 +291,11 @@ public class CapturePopupViewModel : INotifyPropertyChanged
             ResumeTimer();
         else
             PauseTimer();
+    }
+
+    private void UpdateTimerPausedState()
+    {
+        IsTimerPaused = _isPointerOverWindow || _isEditingFilename || _isManuallyPaused;
     }
 
     public void ExpandToFullList()

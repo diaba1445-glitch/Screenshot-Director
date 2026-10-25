@@ -47,6 +47,16 @@ public partial class CapturePopupView : Window
         Focus();
     }
 
+    private void OnWindowMouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        ViewModel?.OnPointerEnterWindow();
+    }
+
+    private void OnWindowMouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        ViewModel?.OnPointerLeaveWindow();
+    }
+
     public void AnimateClose()
     {
         if (_isClosing) return;
@@ -219,14 +229,19 @@ public partial class CapturePopupView : Window
 
     private void OnFilenameGotFocus(object sender, RoutedEventArgs e)
     {
-        ViewModel?.PauseTimer();
+        ViewModel?.SetEditingFilename(true);
+    }
+
+    private void OnFilenameLostFocus(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.SetEditingFilename(false);
     }
 
     private async void OnFilenameKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (ViewModel == null) return;
 
-        ViewModel.PauseTimer();
+        ViewModel.SetEditingFilename(true);
 
         if (e.Key == System.Windows.Input.Key.Enter)
         {
@@ -246,7 +261,7 @@ public partial class CapturePopupView : Window
 
     private void OnFilenameTextChanged(object sender, TextChangedEventArgs e)
     {
-        ViewModel?.PauseTimer();
+        ViewModel?.SetEditingFilename(true);
     }
 
     private void OnDismissClick(object sender, RoutedEventArgs e)

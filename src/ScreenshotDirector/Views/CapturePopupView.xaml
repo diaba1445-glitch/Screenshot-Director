@@ -14,7 +14,9 @@
         ShowInTaskbar="False"
         WindowStartupLocation="Manual"
         Focusable="True"
-        KeyDown="OnWindowKeyDown">
+        KeyDown="OnWindowKeyDown"
+        MouseEnter="OnWindowMouseEnter"
+        MouseLeave="OnWindowMouseLeave">
 
     <Window.RenderTransform>
         <TransformGroup>
@@ -373,111 +375,42 @@
                     <RowDefinition Height="Auto"/> <!-- Session Default Checkbox & Footer -->
                 </Grid.RowDefinitions>
 
-                <!-- Header Row with authentic macOS Traffic Light Controls -->
+                <!-- Header Row: Clean Liquid Glass Header -->
                 <Grid Grid.Row="0" Margin="0,0,0,12">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- macOS Traffic Light Window Controls -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
-                        <!-- Red: Close / Dismiss -->
-                        <Button Width="13" Height="13" Margin="0,0,7,0" Cursor="Hand" Click="OnDismissClick" ToolTip="Dismiss (Esc)">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="dot" Width="13" Height="13" CornerRadius="6.5" Background="#FF5F56" BorderBrush="#E0443E" BorderThickness="0.5">
-                                        <TextBlock x:Name="glyph" Text="✕" FontSize="8" FontWeight="Bold" Foreground="#4A0002" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="glyph" Property="Visibility" Value="Visible"/>
-                                            <Setter TargetName="dot" Property="Background" Value="#FF6F67"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-                        
-                        <!-- Yellow: Pause / Resume Timer -->
-                        <Button Width="13" Height="13" Margin="0,0,7,0" Cursor="Hand" Click="OnTogglePauseClick" ToolTip="Pause / Resume Timer">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="dot" Width="13" Height="13" CornerRadius="6.5" Background="#FFBD2E" BorderBrush="#DEA123" BorderThickness="0.5">
-                                        <TextBlock x:Name="glyph" Text="–" FontSize="9" FontWeight="Bold" Foreground="#543A00" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0" Visibility="Collapsed"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="glyph" Property="Visibility" Value="Visible"/>
-                                            <Setter TargetName="dot" Property="Background" Value="#FFC745"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-
-                        <!-- Green: Select Path / Expand -->
-                        <Button Width="13" Height="13" Cursor="Hand" Click="OnSelectPathClick" ToolTip="Select Custom Path">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border x:Name="dot" Width="13" Height="13" CornerRadius="6.5" Background="#27C93F" BorderBrush="#1AAB29" BorderThickness="0.5">
-                                        <TextBlock x:Name="glyph" Text="+" FontSize="9" FontWeight="Bold" Foreground="#024D0F" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0" Visibility="Collapsed"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="glyph" Property="Visibility" Value="Visible"/>
-                                            <Setter TargetName="dot" Property="Background" Value="#35DC4E"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-                    </StackPanel>
-
-                    <!-- macOS Navigation & Title -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- macOS back/forward pill -->
-                        <Border CornerRadius="6" Padding="6,2" Margin="0,0,10,0">
+                    <!-- Left: Camera Logo Badge & App Title & Mode Badge -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Camera Logo Badge -->
+                        <Border Width="26" Height="26" CornerRadius="13" Margin="0,0,9,0" VerticalAlignment="Center">
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Background" Value="#251E3D"/>
-                                    <Setter Property="BorderBrush" Value="#382E5A"/>
-                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#7C3AED" Offset="0.0"/>
+                                                <GradientStop Color="#6366F1" Offset="1.0"/>
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Background" Value="#E2E8F0"/>
-                                            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                            <Setter Property="Background">
+                                                <Setter.Value>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#3B82F6" Offset="0.0"/>
+                                                        <GradientStop Color="#2563EB" Offset="1.0"/>
+                                                    </LinearGradientBrush>
+                                                </Setter.Value>
+                                            </Setter>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="‹" FontSize="13" FontWeight="Bold" Margin="2,0,6,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#8E8A9F"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                                    <Setter Property="Foreground" Value="#64748B"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Text="›" FontSize="13" FontWeight="Bold" Margin="0,0,2,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#8E8A9F"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                                    <Setter Property="Foreground" Value="#64748B"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </StackPanel>
+                            <TextBlock Text="📸" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
 
                         <!-- Window Title -->
@@ -494,7 +427,7 @@
                             </TextBlock.Style>
                         </TextBlock>
 
-                        <!-- Mode badge -->
+                        <!-- Mode Badge -->
                         <Border CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -524,13 +457,44 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Header Actions Right -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Right: Select Path Pill & Clean Dismiss Button -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Select Path Pill -->
                         <Button Content="📁 Select Path..." 
                                 Click="OnSelectPathClick"
                                 Style="{StaticResource HeaderPillButtonStyle}"
+                                Margin="0,0,8,0"
                                 ToolTip="Direct screenshot to another unlisted folder"/>
+
+                        <!-- Clean Dismiss '✕' Button -->
+                        <Button Click="OnDismissClick"
+                                ToolTip="Dismiss (Esc)"
+                                Width="26" Height="26"
+                                Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="closeBg" CornerRadius="13" Background="Transparent" Padding="4">
+                                        <TextBlock Text="✕" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#8E8A9F"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DataContext.IsLightGlass, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                            <Setter Property="Foreground" Value="#64748B"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="closeBg" Property="Background" Value="#33FF5F56"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </StackPanel>
                 </Grid>
 
@@ -660,6 +624,7 @@
                                          Padding="6,4" 
                                          FontSize="12"
                                          GotFocus="OnFilenameGotFocus"
+                                         LostFocus="OnFilenameLostFocus"
                                          KeyDown="OnFilenameKeyDown"
                                          TextChanged="OnFilenameTextChanged">
                                     <TextBox.Style>
