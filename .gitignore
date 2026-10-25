@@ -23,3 +23,6 @@ publish/
 
 ## Dotnet install
 /dotnet/
+
+## Temporary test and redirect files
+*.txt

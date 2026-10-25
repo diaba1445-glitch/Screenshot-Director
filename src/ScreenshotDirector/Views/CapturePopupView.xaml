@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ScreenshotDirector.Views"
         mc:Ignorable="d"
         Title="Screenshot Director"
+        Icon="pack://application:,,,/ScreenshotDirector;component/Assets/app.ico"
         Width="460" SizeToContent="Height"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -412,35 +413,11 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: Camera Logo Badge & App Title & Mode Badge -->
+                    <!-- Left: Logo Badge & App Title & Mode Badge -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Camera Logo Badge -->
-                        <Border Width="26" Height="26" CornerRadius="13" Margin="0,0,9,0" VerticalAlignment="Center">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                <GradientStop Color="#7C3AED" Offset="0.0"/>
-                                                <GradientStop Color="#6366F1" Offset="1.0"/>
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Background">
-                                                <Setter.Value>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                        <GradientStop Color="#3B82F6" Offset="0.0"/>
-                                                        <GradientStop Color="#2563EB" Offset="1.0"/>
-                                                    </LinearGradientBrush>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="📸" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- App Logo Badge -->
+                        <Border Width="24" Height="24" CornerRadius="6" Margin="0,0,9,0" VerticalAlignment="Center" ClipToBounds="True">
+                            <Image Source="pack://application:,,,/ScreenshotDirector;component/Assets/app.png" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
 
                         <!-- Window Title -->

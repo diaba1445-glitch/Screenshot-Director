@@ -74,34 +74,35 @@ public class TrayIconManager : IDisposable
     {
         try
         {
-            // Create a clean programmatic 32x32 camera/folder icon
-            using var bmp = new Bitmap(32, 32);
-            using (var g = Graphics.FromImage(bmp))
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var icoPath = System.IO.Path.Combine(baseDir, "Assets", "app.ico");
+            if (System.IO.File.Exists(icoPath))
             {
-                g.Clear(Color.Transparent);
-                using var brush = new SolidBrush(Color.FromArgb(0, 122, 204));
-                g.FillRoundedRectangle(brush, 2, 6, 28, 20, 4);
-
-                using var lensBrush = new SolidBrush(Color.White);
-                g.FillEllipse(lensBrush, 10, 10, 12, 12);
-
-                using var innerLensBrush = new SolidBrush(Color.FromArgb(30, 30, 30));
-                g.FillEllipse(innerLensBrush, 13, 13, 6, 6);
+                return new Icon(icoPath, 32, 32);
             }
-            var hIcon = bmp.GetHicon();
-            try
+
+            var resourceUri = new Uri("pack://application:,,,/ScreenshotDirector;component/Assets/app.ico", UriKind.Absolute);
+            var streamInfo = System.Windows.Application.GetResourceStream(resourceUri);
+            if (streamInfo != null)
             {
-                return (Icon)Icon.FromHandle(hIcon).Clone();
-            }
-            finally
-            {
-                NativeMethods.DestroyIcon(hIcon);
+                using var stream = streamInfo.Stream;
+                return new Icon(stream, 32, 32);
             }
         }
-        catch
+        catch { }
+
+        try
         {
-            return SystemIcons.Application;
+            var exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (!string.IsNullOrEmpty(exePath) && System.IO.File.Exists(exePath))
+            {
+                var icon = Icon.ExtractAssociatedIcon(exePath);
+                if (icon != null) return icon;
+            }
         }
+        catch { }
+
+        return SystemIcons.Application;
     }
 
     public void Dispose()

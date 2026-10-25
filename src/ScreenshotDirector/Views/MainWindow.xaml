@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ScreenshotDirector.Views"
         mc:Ignorable="d"
         Title="Screenshot Director" 
+        Icon="pack://application:,,,/ScreenshotDirector;component/Assets/app.ico"
         Height="680" Width="960"
         MinHeight="600" MinWidth="860"
         WindowStartupLocation="CenterScreen"
@@ -420,15 +421,9 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Circular Gradient Logo Badge -->
-                        <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" Margin="0,0,12,0" VerticalAlignment="Center">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#8B5CF6" Offset="0.0"/>
-                                    <GradientStop Color="#6366F1" Offset="1.0"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                            <TextBlock Text="📸" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- Logo Badge -->
+                        <Border Grid.Column="0" Width="38" Height="38" CornerRadius="8" Margin="0,0,12,0" VerticalAlignment="Center" ClipToBounds="True">
+                            <Image Source="pack://application:,,,/ScreenshotDirector;component/Assets/app.png" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
