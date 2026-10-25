@@ -55,56 +55,12 @@ public static class WindowBlurHelper
 
         try
         {
-            // 1. Try Windows 11 DWM SystemBackdrop Type (Acrylic = 4)
-            int backdropType = 4; // DWMSBT_ACRYLIC
             int darkMode = isLightMode ? 0 : 1;
             DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
-            DwmSetWindowAttribute(hwnd, DWMWA_SYSTEMBACKDROP_TYPE, ref backdropType, sizeof(int));
         }
         catch
         {
-            // Ignore on Windows 10
-        }
-
-        try
-        {
-            // 2. Set WindowCompositionAttribute Acrylic Blur
-            // GradientColor format: AABBGGRR
-            // Light: 0x99FFFFFF (subtle translucent frost)
-            // Dark:  0x991C1826 (subtle dark smoked frost)
-            int gradientColor = isLightMode ? unchecked((int)0x66FFFFFF) : unchecked((int)0x80181524);
-
-            var accent = new AccentPolicy
-            {
-                AccentState = AccentState.ACCENT_ENABLE_ACRYLICBLURBEHIND,
-                AccentFlags = 2,
-                GradientColor = gradientColor,
-                AnimationId = 0
-            };
-
-            int structSize = Marshal.SizeOf(accent);
-            IntPtr pMem = Marshal.AllocHGlobal(structSize);
-            try
-            {
-                Marshal.StructureToPtr(accent, pMem, false);
-
-                var data = new WindowCompositionAttributeData
-                {
-                    Attribute = WindowCompositionAttribute.WCA_ACCENT_POLICY,
-                    Data = pMem,
-                    SizeOfData = structSize
-                };
-
-                SetWindowCompositionAttribute(hwnd, ref data);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(pMem);
-            }
-        }
-        catch
-        {
-            // Fallback gracefully: WPF visual glass brushes will render cleanly
+            // Ignore if OS does not support
         }
     }
 }

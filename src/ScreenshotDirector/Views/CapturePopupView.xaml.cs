@@ -107,9 +107,10 @@ public partial class CapturePopupView : Window
             double workRight = workLeft + workWidth;
             double workBottom = workTop + workHeight;
 
+            Measure(new System.Windows.Size(Width, double.PositiveInfinity));
             UpdateLayout();
-            double popupWidth = ActualWidth > 0 ? ActualWidth : Width;
-            double popupHeight = ActualHeight > 0 ? ActualHeight : 350;
+            double popupWidth = ActualWidth > 0 ? ActualWidth : (DesiredSize.Width > 0 ? DesiredSize.Width : Width);
+            double popupHeight = ActualHeight > 0 ? ActualHeight : (DesiredSize.Height > 0 ? DesiredSize.Height : 380);
 
             const double Margin = 24.0;
 

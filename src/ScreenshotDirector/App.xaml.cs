@@ -174,10 +174,17 @@ public partial class App : System.Windows.Application
                         _mainWindow.Show();
                     }
                     _mainWindow.WindowState = WindowState.Normal;
+                    var existingHwnd = new System.Windows.Interop.WindowInteropHelper(_mainWindow).Handle;
+                    if (existingHwnd != IntPtr.Zero)
+                    {
+                        NativeMethods.ShowWindow(existingHwnd, NativeMethods.SW_RESTORE);
+                        NativeMethods.SetForegroundWindow(existingHwnd);
+                    }
                     _mainWindow.Activate();
                     _mainWindow.Topmost = true;
                     _mainWindow.Topmost = false;
                     _mainWindow.Focus();
+                    _logger?.Info("MainWindow restored and brought to foreground successfully.");
                     return;
                 }
 
@@ -199,6 +206,12 @@ public partial class App : System.Windows.Application
                 _mainWindow.Closed += (s, e) => _mainWindow = null;
                 _mainWindow.Show();
                 _mainWindow.WindowState = WindowState.Normal;
+                var newHwnd = new System.Windows.Interop.WindowInteropHelper(_mainWindow).Handle;
+                if (newHwnd != IntPtr.Zero)
+                {
+                    NativeMethods.ShowWindow(newHwnd, NativeMethods.SW_SHOW);
+                    NativeMethods.SetForegroundWindow(newHwnd);
+                }
                 _mainWindow.Activate();
                 _mainWindow.Topmost = true;
                 _mainWindow.Topmost = false;
