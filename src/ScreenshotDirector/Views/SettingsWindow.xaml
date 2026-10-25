@@ -1,0 +1,203 @@
+<Window x:Class="ScreenshotDirector.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:ScreenshotDirector.ViewModels"
+        mc:Ignorable="d"
+        Title="Screenshot Director — Settings" 
+        Height="540" Width="680"
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E1E" 
+        Foreground="#F1F1F1"
+        FontFamily="Segoe UI"
+        ResizeMode="CanResizeWithGrip">
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Title & Subtitle -->
+            <RowDefinition Height="*"/>    <!-- Tabs / Content -->
+            <RowDefinition Height="Auto"/> <!-- Status & Action Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Screenshot Director Settings" 
+                       FontSize="20" FontWeight="SemiBold" 
+                       Foreground="#00A2ED"/>
+            <TextBlock Text="Manage your target screenshot folders, keyboard shortcuts, and detection behavior." 
+                       FontSize="12" Foreground="#8E8E93" 
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Main Content Tabs -->
+        <TabControl Grid.Row="1" Background="#252526" BorderBrush="#3E3E42">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Foreground" Value="#CCCCCC"/>
+                    <Setter Property="FontSize" Value="13"/>
+                    <Setter Property="Padding" Value="14,8"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border x:Name="border" Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1,1,1,0" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter ContentSource="Header"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="border" Property="Background" Value="#252526"/>
+                                        <Setter Property="Foreground" Value="#00A2ED"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <!-- Destinations Tab -->
+            <TabItem Header="📁 Destinations">
+                <Grid Margin="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Destinations List -->
+                    <ListBox Grid.Column="0" Grid.Row="0" 
+                             ItemsSource="{Binding Destinations}" 
+                             SelectedItem="{Binding SelectedDestination}"
+                             Background="#1E1E1E" 
+                             BorderBrush="#3E3E42"
+                             Margin="0,0,10,10">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="4,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="28"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#007ACC" CornerRadius="3" Width="20" Height="20">
+                                        <TextBlock Text="{Binding ShortcutNumber}" Foreground="White" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" Foreground="White" FontSize="13"/>
+                                        <TextBlock Text="{Binding Path}" Foreground="#8E8E93" FontSize="11"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="2" IsChecked="{Binding IsEnabled}" ToolTip="Enable this destination" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <!-- List Actions (Side) -->
+                    <StackPanel Grid.Column="1" Grid.Row="0" Width="100">
+                        <Button Content="➕ Add" Click="OnAddDestinationClick" Margin="0,0,0,6" Padding="6,6" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42"/>
+                        <Button Content="🗑 Remove" Click="OnRemoveDestinationClick" Margin="0,0,0,6" Padding="6,6" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42"/>
+                        <Separator Margin="0,4,0,8" Background="#3E3E42"/>
+                        <Button Content="▲ Move Up" Click="OnMoveUpClick" Margin="0,0,0,6" Padding="6,6" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42"/>
+                        <Button Content="▼ Move Down" Click="OnMoveDownClick" Margin="0,0,0,6" Padding="6,6" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42"/>
+                    </StackPanel>
+
+                    <!-- Edit Selected Item Form -->
+                    <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" 
+                            Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" CornerRadius="4" Padding="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Folder Name:" VerticalAlignment="Center" Margin="0,0,8,6" Foreground="#CCCCCC"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedDestination.Name, UpdateSourceTrigger=PropertyChanged}" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42" Padding="4" Margin="0,0,8,6"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Folder Path:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#CCCCCC"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDestination.Path, UpdateSourceTrigger=PropertyChanged}" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42" Padding="4" Margin="0,0,8,0"/>
+                            <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Click="OnBrowsePathClick" Padding="10,4" Background="#007ACC" Foreground="White" BorderThickness="0"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Preferences Tab -->
+            <TabItem Header="⚙ General Preferences">
+                <StackPanel Margin="18">
+                    <!-- Start with Windows -->
+                    <CheckBox IsChecked="{Binding StartWithWindows}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Start automatically with Windows" FontWeight="SemiBold" Foreground="White"/>
+                            <TextBlock Text="Launches Screenshot Director minimized to the system tray on user login." Foreground="#8E8E93" FontSize="11"/>
+                        </StackPanel>
+                    </CheckBox>
+
+                    <!-- System Tray -->
+                    <CheckBox IsChecked="{Binding RunInSystemTray}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Keep active in system tray" FontWeight="SemiBold" Foreground="White"/>
+                            <TextBlock Text="Allows closing windows without exiting the background screenshot listener." Foreground="#8E8E93" FontSize="11"/>
+                        </StackPanel>
+                    </CheckBox>
+
+                    <!-- Copy saved path -->
+                    <CheckBox IsChecked="{Binding CopySavedPathToClipboard}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Copy saved file path to clipboard" FontWeight="SemiBold" Foreground="White"/>
+                            <TextBlock Text="Immediately places the full file path on the clipboard after a successful save." Foreground="#8E8E93" FontSize="11"/>
+                        </StackPanel>
+                    </CheckBox>
+
+                    <!-- Popup timeout -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Popup auto-dismiss timeout (seconds):" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="1" Text="{Binding PopupTimeoutSeconds}" Background="#2D2D30" Foreground="White" BorderBrush="#3E3E42" Padding="4" TextAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="(1 - 60 seconds)" Foreground="#8E8E93" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <!-- Detection Mode -->
+                    <Border Background="#1E1E1E" BorderBrush="#3E3E42" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,4,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Screenshot Provenance &amp; Detection Mode" FontWeight="SemiBold" Foreground="#00A2ED"/>
+                            <TextBlock Text="Screenshots taken via Win+Shift+S, Snipping Tool, or PrtScn are automatically detected." Foreground="#CCCCCC" FontSize="11" Margin="0,2,0,8"/>
+                            <CheckBox IsChecked="{Binding GenericImageFallbackEnabled}">
+                                <StackPanel>
+                                    <TextBlock Text="Enable Generic Image Fallback" Foreground="White"/>
+                                    <TextBlock Text="When enabled, also triggers on generic images copied to clipboard (e.g. from image viewers)." Foreground="#8E8E93" FontSize="11"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- Bottom Action Bar -->
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="#4CAF50" VerticalAlignment="Center"/>
+
+            <Button Grid.Column="1" Content="Save Changes" Click="OnSaveClick" Width="110" Height="30" Margin="0,0,10,0" Background="#007ACC" Foreground="White" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
+            <Button Grid.Column="2" Content="Cancel" Click="OnCancelClick" Width="80" Height="30" Background="#2D2D30" Foreground="#CCCCCC" BorderBrush="#3E3E42" Cursor="Hand"/>
+        </Grid>
+    </Grid>
+</Window>
