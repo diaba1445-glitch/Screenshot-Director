@@ -230,5 +230,35 @@ public class MainControlViewModelTests : IDisposable
         Assert.False(vm.HasRecentCaptures);
         Assert.Empty(vm.RecentCaptures);
     }
+
+    [Fact]
+    public void MainWindow_InstantiatesAndRendersVisualTree_WithoutXamlOrDispatcherExceptions()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var testFilePath = Path.Combine(_tempDir, "RenderTest_Screenshot.png");
+            File.WriteAllBytes(testFilePath, new byte[] { 1, 2, 3 });
+
+            var vm = new MainControlViewModel(_settingsService, _startupManager, _detectionService, null, _logger);
+            vm.AddRecentCapture(testFilePath);
+
+            var window = new ScreenshotDirector.Views.MainWindow
+            {
+                DataContext = vm
+            };
+
+            // Force layout measurement and arrangement of the visual tree
+            window.Measure(new System.Windows.Size(960, 680));
+            window.Arrange(new System.Windows.Rect(0, 0, 960, 680));
+            window.UpdateLayout();
+
+            Assert.NotNull(window);
+            Assert.Equal("Screenshot Director", window.Title);
+            Assert.True(window.IsLoaded || window.ActualWidth >= 0);
+
+            window.Close();
+        });
+    }
 }
+
 

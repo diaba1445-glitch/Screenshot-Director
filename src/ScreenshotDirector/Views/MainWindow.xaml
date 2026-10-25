@@ -620,11 +620,7 @@
                                                 <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Text="{Binding DirectoryPath}" Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Margin="0,1,0,0" FontSize="10" Foreground="#656277">
-                                                        <Run Text="{Binding DisplayTime}"/>
-                                                        <Run Text=" · "/>
-                                                        <Run Text="{Binding DisplaySize}"/>
-                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding DetailsText}" Margin="0,1,0,0" FontSize="10" Foreground="#656277"/>
                                                 </StackPanel>
 
                                                 <!-- Action Buttons: Open File & Open Folder -->

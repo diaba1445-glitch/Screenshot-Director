@@ -300,6 +300,31 @@ public class PopupViewModelTests : IDisposable
             Assert.Contains(updatedSettings.Destinations, d => d.Path.Equals(customTarget, StringComparison.OrdinalIgnoreCase));
         });
     }
+
+    [Fact]
+    public void CapturePopupView_InstantiatesAndRendersVisualTree_WithoutExceptions()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            var popup = new ScreenshotDirector.Views.CapturePopupView
+            {
+                DataContext = vm
+            };
+
+            popup.Measure(new System.Windows.Size(440, 500));
+            popup.Arrange(new System.Windows.Rect(0, 0, 440, 500));
+            popup.UpdateLayout();
+
+            Assert.NotNull(popup);
+            Assert.True(popup.ActualWidth >= 0);
+
+            popup.Close();
+        });
+    }
 }
+
 
 

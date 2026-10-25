@@ -10,15 +10,16 @@ namespace ScreenshotDirector.ViewModels;
 
 public class RecentCaptureItem
 {
-    public string Filename { get; init; } = string.Empty;
-    public string FileName => Filename;
-    public string FilePath { get; init; } = string.Empty;
-    public string FolderPath { get; init; } = string.Empty;
-    public string DirectoryPath => FolderPath;
-    public string TimeFormatted { get; init; } = string.Empty;
-    public string DisplayTime => TimeFormatted;
-    public string SizeFormatted { get; init; } = string.Empty;
-    public string DisplaySize => SizeFormatted;
+    public string Filename { get; set; } = string.Empty;
+    public string FileName { get => Filename; set => Filename = value; }
+    public string FilePath { get; set; } = string.Empty;
+    public string FolderPath { get; set; } = string.Empty;
+    public string DirectoryPath { get => FolderPath; set => FolderPath = value; }
+    public string TimeFormatted { get; set; } = string.Empty;
+    public string DisplayTime { get => TimeFormatted; set => TimeFormatted = value; }
+    public string SizeFormatted { get; set; } = string.Empty;
+    public string DisplaySize { get => SizeFormatted; set => SizeFormatted = value; }
+    public string DetailsText => $"{TimeFormatted} · {SizeFormatted}";
     public bool Exists => File.Exists(FilePath);
 }
 
