@@ -187,10 +187,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
                         <Border Background="{TemplateBinding Background}" CornerRadius="1.5" ClipToBounds="True">
-                            <Border x:Name="PART_Indicator" 
-                                    Background="{TemplateBinding Foreground}" 
-                                    HorizontalAlignment="Left" 
-                                    CornerRadius="1.5"/>
+                            <!-- ProgressBar only sizes PART_Indicator when PART_Track exists -->
+                            <Grid x:Name="PART_Track">
+                                <Border x:Name="PART_Indicator"
+                                        Background="{TemplateBinding Foreground}"
+                                        HorizontalAlignment="Left"
+                                        CornerRadius="1.5"/>
+                            </Grid>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
