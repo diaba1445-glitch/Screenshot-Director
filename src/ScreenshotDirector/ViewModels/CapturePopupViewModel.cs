@@ -55,7 +55,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private DispatcherTimer? _countdownTimer;
     private int _timeoutSeconds;
     private int _remainingTimeMs;
-    private const int TimerTickIntervalMs = 16; // 60fps ultra-smooth countdown
+    private const int TimerTickIntervalMs = 50; // Smooth 20fps countdown, lightweight on UI thread
     private long _lastTickTimestamp;
 
     private BitmapSource? _previewImage;
@@ -270,6 +270,12 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         _logger.Debug($"Pointer left popup - countdown timer resumed (remaining: {_remainingTimeMs}ms).");
     }
 
+    public void ResetPointerHoverState()
+    {
+        _isPointerOverWindow = false;
+        UpdateTimerPausedState();
+    }
+
     public void SetEditingFilename(bool isEditing)
     {
         _isEditingFilename = isEditing;
@@ -334,7 +340,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     {
         StopTimer();
         _lastTickTimestamp = Stopwatch.GetTimestamp();
-        _countdownTimer = new DispatcherTimer(DispatcherPriority.Render)
+        _countdownTimer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromMilliseconds(TimerTickIntervalMs)
         };

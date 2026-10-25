@@ -26,6 +26,9 @@ public partial class App : System.Windows.Application
     private MainWindow? _mainWindow;
     private readonly object _popupLock = new();
 
+    private CaptureCandidate? _deferredEditorCandidate;
+    private System.Windows.Threading.DispatcherTimer? _editorWatcherTimer;
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -118,47 +121,121 @@ public partial class App : System.Windows.Application
             {
                 try
                 {
-                    // If a popup is already active, close it cleanly first
-                    if (_activePopup != null)
+                    // If an image markup editor (e.g. Snipping Tool, Paint) is currently active in the foreground,
+                    // do not interrupt the user's drawing canvas or steal focus.
+                    if (NativeMethods.IsForegroundMarkupEditor())
                     {
-                        try { _activePopup.Close(); } catch { }
-                        _activePopup = null;
-                    }
+                        // Dismiss any active popup immediately so it does not persist over the editing canvas or lag DWM
+                        if (_activePopup != null)
+                        {
+                            try { _activePopup.Close(); } catch { }
+                            _activePopup = null;
+                        }
 
-                    if (_saveService == null || _notificationService == null || _settingsService == null || _logger == null)
-                    {
+                        _deferredEditorCandidate = candidate;
+                        _logger?.Info($"Screenshot detected while editing in markup editor ({NativeMethods.GetForegroundProcessName()}). Deferring popup until editor loses focus or closes.");
+
+                        StartEditorWatcherTimer();
                         return;
                     }
 
-                    var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
-                    vm.Initialize(candidate);
-
-                    var popup = new CapturePopupView
-                    {
-                        DataContext = vm
-                    };
-
-                    popup.Closed += (s, e) =>
-                    {
-                        lock (_popupLock)
-                        {
-                            if (ReferenceEquals(_activePopup, popup))
-                            {
-                                _activePopup = null;
-                            }
-                        }
-                    };
-
-                    _activePopup = popup;
-                    popup.Show();
-                    popup.Activate();
+                    // Standard immediate popup presentation
+                    StopEditorWatcherTimer();
+                    _deferredEditorCandidate = null;
+                    ShowCapturePopup(candidate);
                 }
                 catch (Exception ex)
                 {
-                    _logger?.Error("Failed to display CapturePopupView", ex);
+                    _logger?.Error("Failed to handle screenshot detection", ex);
                 }
             }
         });
+    }
+
+    private void StartEditorWatcherTimer()
+    {
+        if (_editorWatcherTimer == null)
+        {
+            _editorWatcherTimer = new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(300)
+            };
+            _editorWatcherTimer.Tick += OnEditorWatcherTick;
+        }
+
+        if (!_editorWatcherTimer.IsEnabled)
+        {
+            _editorWatcherTimer.Start();
+        }
+    }
+
+    private void StopEditorWatcherTimer()
+    {
+        if (_editorWatcherTimer != null && _editorWatcherTimer.IsEnabled)
+        {
+            _editorWatcherTimer.Stop();
+        }
+    }
+
+    private void OnEditorWatcherTick(object? sender, EventArgs e)
+    {
+        lock (_popupLock)
+        {
+            // If the editor is still in the foreground, continue waiting for the user to finish
+            if (NativeMethods.IsForegroundMarkupEditor())
+            {
+                return;
+            }
+
+            // Editor is no longer the foreground window (user finished annotating, closed, or switched away)
+            StopEditorWatcherTimer();
+
+            if (_deferredEditorCandidate != null)
+            {
+                var candidate = _deferredEditorCandidate;
+                _deferredEditorCandidate = null;
+                _logger?.Info("Markup editor deactivated or closed. Presenting final annotated screenshot popup.");
+                ShowCapturePopup(candidate);
+            }
+        }
+    }
+
+    private void ShowCapturePopup(CaptureCandidate candidate)
+    {
+        // If a popup is already active, close it cleanly first
+        if (_activePopup != null)
+        {
+            try { _activePopup.Close(); } catch { }
+            _activePopup = null;
+        }
+
+        if (_saveService == null || _notificationService == null || _settingsService == null || _logger == null)
+        {
+            return;
+        }
+
+        var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+        vm.Initialize(candidate);
+
+        var popup = new CapturePopupView
+        {
+            DataContext = vm
+        };
+
+        popup.Closed += (s, e) =>
+        {
+            lock (_popupLock)
+            {
+                if (ReferenceEquals(_activePopup, popup))
+                {
+                    _activePopup = null;
+                }
+            }
+        };
+
+        _activePopup = popup;
+        popup.Show();
+        popup.Activate();
     }
 
     private void OpenMainWindow()
@@ -229,6 +306,12 @@ public partial class App : System.Windows.Application
     private void ShutdownApp()
     {
         _logger?.Info("Screenshot Director shutting down...");
+
+        try
+        {
+            StopEditorWatcherTimer();
+        }
+        catch { }
 
         try
         {

@@ -78,4 +78,21 @@ public class CaptureDetectionTests : IDisposable
         Assert.True(reloaded.GenericImageFallbackEnabled);
         Assert.Equal(ClipboardDetectionMode.GenericFallback, reloaded.ClipboardDetectionMode);
     }
+
+    [Fact]
+    public void IsForegroundMarkupEditor_HonorsOverrideAndRecognizesEditors()
+    {
+        try
+        {
+            ScreenshotDirector.Platform.NativeMethods.IsForegroundMarkupEditorOverride = () => true;
+            Assert.True(ScreenshotDirector.Platform.NativeMethods.IsForegroundMarkupEditor());
+
+            ScreenshotDirector.Platform.NativeMethods.IsForegroundMarkupEditorOverride = () => false;
+            Assert.False(ScreenshotDirector.Platform.NativeMethods.IsForegroundMarkupEditor());
+        }
+        finally
+        {
+            ScreenshotDirector.Platform.NativeMethods.IsForegroundMarkupEditorOverride = null;
+        }
+    }
 }

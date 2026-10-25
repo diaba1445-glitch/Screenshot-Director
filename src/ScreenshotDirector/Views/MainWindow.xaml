@@ -484,7 +484,7 @@
                             <TextBlock Text="GitHub Repo" FontSize="12" VerticalAlignment="Center" FontWeight="Medium"/>
                         </StackPanel>
                     </Button>
-                    <TextBlock Text="Version 1.0.0" FontSize="11" Foreground="#656277" Margin="4,0,0,0"/>
+                    <TextBlock Text="Version 1.0.1" FontSize="11" Foreground="#656277" Margin="4,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>

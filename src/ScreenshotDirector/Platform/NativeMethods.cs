@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace ScreenshotDirector.Platform;
 
-internal static class NativeMethods
+public static class NativeMethods
 {
     public const int WM_CLIPBOARDUPDATE = 0x031D;
     public const int WM_SHOW_SETTINGS = 0x0400 + 101; // Custom application message
@@ -81,6 +81,46 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyIcon(IntPtr hIcon);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    public static Func<bool>? IsForegroundMarkupEditorOverride { get; set; }
+
+    public static string? GetForegroundProcessName()
+    {
+        try
+        {
+            IntPtr hwnd = GetForegroundWindow();
+            if (hwnd == IntPtr.Zero) return null;
+            GetWindowThreadProcessId(hwnd, out uint pid);
+            if (pid == 0) return null;
+            using var process = System.Diagnostics.Process.GetProcessById((int)pid);
+            return process.ProcessName;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static bool IsForegroundMarkupEditor()
+    {
+        if (IsForegroundMarkupEditorOverride != null)
+        {
+            return IsForegroundMarkupEditorOverride();
+        }
+
+        var procName = GetForegroundProcessName();
+        if (string.IsNullOrEmpty(procName)) return false;
+
+        return procName.Equals("SnippingTool", StringComparison.OrdinalIgnoreCase) ||
+               procName.Equals("mspaint", StringComparison.OrdinalIgnoreCase) ||
+               procName.Equals("PaintApp", StringComparison.OrdinalIgnoreCase);
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT

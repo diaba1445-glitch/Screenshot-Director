@@ -26,3 +26,4 @@ publish/
 
 ## Temporary test and redirect files
 *.txt
+*.lnk

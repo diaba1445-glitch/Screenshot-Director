@@ -19,11 +19,41 @@ public partial class CapturePopupView : Window
         InitializeComponent();
         Loaded += OnLoaded;
         Closed += OnClosed;
+        Deactivated += OnDeactivated;
     }
 
     private void OnClosed(object? sender, EventArgs e)
     {
         ViewModel?.Dismiss();
+    }
+
+    private void OnDeactivated(object? sender, EventArgs e)
+    {
+        ViewModel?.ResetPointerHoverState();
+
+        // If the user activated an image markup editor (e.g. Snipping Tool), dismiss this popup immediately
+        // so it does not persist over the editing canvas or cause DWM lag.
+        if (NativeMethods.IsForegroundMarkupEditor())
+        {
+            AnimateClose();
+            return;
+        }
+
+        // Also check after a brief delay in case the editor is launching from a notification click
+        Task.Delay(150).ContinueWith(_ =>
+        {
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (!_isClosing && NativeMethods.IsForegroundMarkupEditor())
+                    {
+                        AnimateClose();
+                    }
+                });
+            }
+            catch { }
+        });
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)

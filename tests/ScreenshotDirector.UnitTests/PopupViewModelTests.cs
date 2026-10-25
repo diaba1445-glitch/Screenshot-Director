@@ -377,6 +377,29 @@ public class PopupViewModelTests : IDisposable
             Assert.False(vm.IsTimerPaused);
         });
     }
+
+    [Fact]
+    public void ResetPointerHoverState_ResumesTimerIfPausedByHover()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            var candidate = new CaptureCandidate
+            {
+                Generation = 1,
+                ImageSource = CreateTestBitmap()
+            };
+
+            vm.Initialize(candidate);
+            Assert.False(vm.IsTimerPaused);
+
+            vm.OnPointerEnterWindow();
+            Assert.True(vm.IsTimerPaused);
+
+            vm.ResetPointerHoverState();
+            Assert.False(vm.IsTimerPaused);
+        });
+    }
 }
 
 
