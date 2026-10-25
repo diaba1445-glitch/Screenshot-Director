@@ -1,9 +1,19 @@
-# 📸 Screenshot Director
+<p align="center">
+  <img src="assets/logo.png" alt="Screenshot Director Logo" width="160" height="160" style="border-radius: 28px;" />
+</p>
 
-[![Download v1.0.0](https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.0-7C3AED?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.0/ScreenshotDirector-v1.0.0-win-x64.zip)
-[![Release](https://img.shields.io/github/v/release/diaba1445-glitch/Screenshot-Director?style=for-the-badge&color=8B5CF6)](https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest)
-[![Tests](https://img.shields.io/badge/Tests-51%20Passing-10B981?style=for-the-badge)](https://github.com/diaba1445-glitch/Screenshot-Director)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+<h1 align="center">Screenshot Director</h1>
+
+<p align="center">
+  <b>Instant, intelligent screenshot routing &amp; lossless organization for Windows 10 &amp; 11</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.0/ScreenshotDirector-v1.0.0-win-x64.zip"><img src="https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.0-7C3AED?style=for-the-badge&logo=windows&logoColor=white" alt="Download v1.0.0" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest"><img src="https://img.shields.io/github/v/release/diaba1445-glitch/Screenshot-Director?style=for-the-badge&color=8B5CF6" alt="Release" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director"><img src="https://img.shields.io/badge/Tests-54%20Passing-10B981?style=for-the-badge" alt="Tests" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
+</p>
 
 **Screenshot Director** is a lightweight, native Windows desktop utility that streamlines and automates screenshot management. Instead of letting captures clutter your clipboard or generic `Pictures\Screenshots` folder, Screenshot Director intercepts screenshots and displays a compact, instant destination routing popup right near your cursor or screen anchor.
 
