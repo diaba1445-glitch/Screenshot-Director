@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
@@ -54,7 +55,8 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private DispatcherTimer? _countdownTimer;
     private int _timeoutSeconds;
     private int _remainingTimeMs;
-    private const int TimerTickIntervalMs = 100;
+    private const int TimerTickIntervalMs = 16; // 60fps ultra-smooth countdown
+    private long _lastTickTimestamp;
 
     private BitmapSource? _previewImage;
     private string _filename = string.Empty;
@@ -297,7 +299,12 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
     private void UpdateTimerPausedState()
     {
+        bool wasPaused = IsTimerPaused;
         IsTimerPaused = _isPointerOverWindow || _isEditingFilename || _isManuallyPaused;
+        if (wasPaused && !IsTimerPaused)
+        {
+            _lastTickTimestamp = Stopwatch.GetTimestamp();
+        }
     }
 
     public void ExpandToFullList()
@@ -319,13 +326,15 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public void ResetTimeout()
     {
         _remainingTimeMs = _timeoutSeconds * 1000;
+        _lastTickTimestamp = Stopwatch.GetTimestamp();
         TimeoutProgress = 1.0;
     }
 
     private void StartTimer()
     {
         StopTimer();
-        _countdownTimer = new DispatcherTimer
+        _lastTickTimestamp = Stopwatch.GetTimestamp();
+        _countdownTimer = new DispatcherTimer(DispatcherPriority.Render)
         {
             Interval = TimeSpan.FromMilliseconds(TimerTickIntervalMs)
         };
@@ -345,12 +354,16 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
     private void OnTimerTick(object? sender, EventArgs e)
     {
+        var now = Stopwatch.GetTimestamp();
+        var elapsedMs = (double)(now - _lastTickTimestamp) * 1000.0 / Stopwatch.Frequency;
+        _lastTickTimestamp = now;
+
         if (IsSaving || IsTimerPaused) return;
 
-        _remainingTimeMs -= TimerTickIntervalMs;
+        _remainingTimeMs -= (int)Math.Round(elapsedMs);
         if (_timeoutSeconds > 0)
         {
-            TimeoutProgress = Math.Clamp((double)_remainingTimeMs / (_timeoutSeconds * 1000), 0.0, 1.0);
+            TimeoutProgress = Math.Clamp((double)_remainingTimeMs / (_timeoutSeconds * 1000.0), 0.0, 1.0);
         }
 
         if (_remainingTimeMs <= 0)

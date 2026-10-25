@@ -166,6 +166,48 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Ultra-Smooth Glass Countdown Progress Bar -->
+        <Style x:Key="SmoothCountdownBarStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="3"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="#231C38"/>
+            <Setter Property="Foreground">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#A855F7" Offset="0.0"/>
+                        <GradientStop Color="#C084FC" Offset="0.5"/>
+                        <GradientStop Color="#EC4899" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="1.5" ClipToBounds="True">
+                            <Border x:Name="PART_Indicator" 
+                                    Background="{TemplateBinding Foreground}" 
+                                    HorizontalAlignment="Left" 
+                                    CornerRadius="1.5"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                    <Setter Property="Background" Value="#E2E8F0"/>
+                    <Setter Property="Foreground">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#2563EB" Offset="0.0"/>
+                                <GradientStop Color="#3B82F6" Offset="0.5"/>
+                                <GradientStop Color="#60A5FA" Offset="1.0"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <!-- Outer Glass Shell with Hardware Acrylic Backdrop & Ambient Shadow -->
@@ -343,25 +385,11 @@
 
                 <!-- Timeout Bar -->
                 <ProgressBar Grid.Row="1" 
-                             Height="3" 
+                             Style="{StaticResource SmoothCountdownBarStyle}"
                              Minimum="0.0" 
                              Maximum="1.0" 
                              Value="{Binding TimeoutProgress, Mode=OneWay}" 
-                             BorderThickness="0" 
-                             Margin="0,10,0,0">
-                    <ProgressBar.Style>
-                        <Style TargetType="ProgressBar">
-                            <Setter Property="Foreground" Value="#8B5CF6"/>
-                            <Setter Property="Background" Value="#1F1A30"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                    <Setter Property="Foreground" Value="#3B82F6"/>
-                                    <Setter Property="Background" Value="#E2E8F0"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ProgressBar.Style>
-                </ProgressBar>
+                             Margin="0,10,0,0"/>
             </Grid>
 
             <!-- ============================================== -->
@@ -917,24 +945,10 @@
                     </CheckBox>
 
                     <!-- Timeout Bar -->
-                    <ProgressBar Height="3" 
+                    <ProgressBar Style="{StaticResource SmoothCountdownBarStyle}"
                                  Minimum="0.0" 
                                  Maximum="1.0" 
-                                 Value="{Binding TimeoutProgress, Mode=OneWay}" 
-                                 BorderThickness="0">
-                        <ProgressBar.Style>
-                            <Style TargetType="ProgressBar">
-                                <Setter Property="Foreground" Value="#8B5CF6"/>
-                                <Setter Property="Background" Value="#1F1A30"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                        <Setter Property="Foreground" Value="#3B82F6"/>
-                                        <Setter Property="Background" Value="#E2E8F0"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ProgressBar.Style>
-                    </ProgressBar>
+                                 Value="{Binding TimeoutProgress, Mode=OneWay}"/>
 
                     <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>
