@@ -8,11 +8,26 @@ using ScreenshotDirector.Core.Models;
 
 namespace ScreenshotDirector.ViewModels;
 
+public class RecentCaptureItem
+{
+    public string Filename { get; init; } = string.Empty;
+    public string FileName => Filename;
+    public string FilePath { get; init; } = string.Empty;
+    public string FolderPath { get; init; } = string.Empty;
+    public string DirectoryPath => FolderPath;
+    public string TimeFormatted { get; init; } = string.Empty;
+    public string DisplayTime => TimeFormatted;
+    public string SizeFormatted { get; init; } = string.Empty;
+    public string DisplaySize => SizeFormatted;
+    public bool Exists => File.Exists(FilePath);
+}
+
 public class MainControlViewModel : INotifyPropertyChanged
 {
     private readonly ISettingsService _settingsService;
     private readonly IStartupManager _startupManager;
     private readonly ICaptureDetectionService? _detectionService;
+    private readonly IImageSaveService? _saveService;
     private readonly Action? _shutdownAction;
     private readonly IAppLogger _logger;
 
@@ -148,18 +163,236 @@ public class MainControlViewModel : INotifyPropertyChanged
         ? _settingsService.SessionDefaultPath
         : "None (Popup asks destination each time)";
 
+    private string _currentPage = "Home";
+    public string CurrentPage
+    {
+        get => _currentPage;
+        set
+        {
+            if (_currentPage != value)
+            {
+                _currentPage = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsHome));
+                OnPropertyChanged(nameof(IsPresets));
+                OnPropertyChanged(nameof(IsPopupSettings));
+                OnPropertyChanged(nameof(IsGeneralSettings));
+                OnPropertyChanged(nameof(IsAbout));
+                OnPropertyChanged(nameof(PageTitle));
+                OnPropertyChanged(nameof(PageSubtitle));
+            }
+        }
+    }
+
+    public bool IsHome => CurrentPage == "Home";
+    public bool IsPresets => CurrentPage == "Presets";
+    public bool IsPopupSettings => CurrentPage == "PopupSettings";
+    public bool IsGeneralSettings => CurrentPage == "GeneralSettings";
+    public bool IsAbout => CurrentPage == "About";
+
+    public string PageTitle => CurrentPage switch
+    {
+        "Home" => "Home",
+        "Presets" => "Preset Folders (Keys 1–9)",
+        "PopupSettings" => "Popup & Routing",
+        "GeneralSettings" => "General & Permissions",
+        "About" => "About Screenshot Director",
+        _ => "Home"
+    };
+
+    public string PageSubtitle => CurrentPage switch
+    {
+        "Home" => "Live screenshot listening, quick test & recent routing activity",
+        "Presets" => "Map screenshot destination folders to keys 1–9",
+        "PopupSettings" => "Configure screen position, animation, and session default routing",
+        "GeneralSettings" => "Windows startup, tray minimization, and system permissions",
+        "About" => "Lightweight, instant screenshot router for Windows",
+        _ => string.Empty
+    };
+
+    public void NavigateTo(string pageName) => CurrentPage = pageName;
+
+    public ObservableCollection<RecentCaptureItem> RecentCaptures { get; } = new();
+    public bool HasRecentCaptures => RecentCaptures.Count > 0;
+
+    private string _recentSearchQuery = string.Empty;
+    public string RecentSearchQuery
+    {
+        get => _recentSearchQuery;
+        set
+        {
+            if (_recentSearchQuery != value)
+            {
+                _recentSearchQuery = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FilteredRecentCaptures));
+            }
+        }
+    }
+
+    public IEnumerable<RecentCaptureItem> FilteredRecentCaptures
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(RecentSearchQuery))
+                return RecentCaptures;
+            return RecentCaptures.Where(c => 
+                c.Filename.Contains(RecentSearchQuery, StringComparison.OrdinalIgnoreCase) ||
+                c.FolderPath.Contains(RecentSearchQuery, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    public void AddRecentCapture(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+        try
+        {
+            long bytes = 0;
+            if (File.Exists(filePath))
+            {
+                bytes = new FileInfo(filePath).Length;
+            }
+            string sizeStr = bytes > 1024 * 1024
+                ? $"{(bytes / 1024.0 / 1024.0):F1} MB"
+                : $"{(bytes / 1024.0):F0} KB";
+
+            var item = new RecentCaptureItem
+            {
+                Filename = Path.GetFileName(filePath),
+                FilePath = filePath,
+                FolderPath = Path.GetDirectoryName(filePath) ?? string.Empty,
+                TimeFormatted = DateTime.Now.ToString("g"),
+                SizeFormatted = sizeStr
+            };
+
+            void InsertItem()
+            {
+                RecentCaptures.Insert(0, item);
+                while (RecentCaptures.Count > 25)
+                {
+                    RecentCaptures.RemoveAt(RecentCaptures.Count - 1);
+                }
+                OnPropertyChanged(nameof(HasRecentCaptures));
+                OnPropertyChanged(nameof(FilteredRecentCaptures));
+            }
+
+            if (System.Windows.Application.Current?.Dispatcher != null)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(InsertItem);
+            }
+            else
+            {
+                InsertItem();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning("Failed to add recent capture to list", ex);
+        }
+    }
+
+    public void ClearRecentCaptures()
+    {
+        RecentCaptures.Clear();
+        OnPropertyChanged(nameof(HasRecentCaptures));
+        OnPropertyChanged(nameof(FilteredRecentCaptures));
+    }
+
+    public void OpenFile(string? filePath)
+    {
+        if (!string.IsNullOrWhiteSpace(filePath) && File.Exists(filePath))
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = filePath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to open file: {filePath}", ex);
+            }
+        }
+    }
+
+    public void OpenFolder(string? folderPath)
+    {
+        if (!string.IsNullOrWhiteSpace(folderPath) && Directory.Exists(folderPath))
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = folderPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Failed to open folder: {folderPath}", ex);
+            }
+        }
+    }
+
+    private void SeedRecentCapturesFromDisk()
+    {
+        try
+        {
+            var candidateDirs = Destinations
+                .Select(d => d.Path)
+                .Where(p => !string.IsNullOrWhiteSpace(p) && Directory.Exists(p))
+                .Distinct();
+
+            var recentFiles = new List<string>();
+            foreach (var dir in candidateDirs)
+            {
+                try
+                {
+                    var files = Directory.GetFiles(dir, "*.png")
+                        .Select(f => new FileInfo(f))
+                        .OrderByDescending(fi => fi.LastWriteTime)
+                        .Take(5)
+                        .Select(fi => fi.FullName);
+                    recentFiles.AddRange(files);
+                }
+                catch { }
+            }
+
+            foreach (var file in recentFiles.OrderByDescending(File.GetLastWriteTime).Take(10))
+            {
+                AddRecentCapture(file);
+            }
+        }
+        catch { }
+    }
+
     public MainControlViewModel(
         ISettingsService settingsService,
         IStartupManager startupManager,
         ICaptureDetectionService? detectionService,
+        IImageSaveService? saveService,
         Action? shutdownAction,
         IAppLogger logger)
     {
         _settingsService = settingsService;
         _startupManager = startupManager;
         _detectionService = detectionService;
+        _saveService = saveService;
         _shutdownAction = shutdownAction;
         _logger = logger;
+
+        if (_saveService != null)
+        {
+            _saveService.ImageSaved += (s, result) =>
+            {
+                if (result.Success && !string.IsNullOrWhiteSpace(result.SavedFilePath))
+                {
+                    AddRecentCapture(result.SavedFilePath);
+                }
+            };
+        }
 
         _settingsService.SessionDefaultPathChanged += (s, path) =>
         {
@@ -169,6 +402,17 @@ public class MainControlViewModel : INotifyPropertyChanged
 
         _isDetectionPaused = _detectionService?.IsPaused ?? false;
         LoadFromSettings(_settingsService.CurrentSettings);
+        SeedRecentCapturesFromDisk();
+    }
+
+    public MainControlViewModel(
+        ISettingsService settingsService,
+        IStartupManager startupManager,
+        ICaptureDetectionService? detectionService,
+        Action? shutdownAction,
+        IAppLogger logger)
+        : this(settingsService, startupManager, detectionService, null, shutdownAction, logger)
+    {
     }
 
     public void SetSessionDefault(string path)

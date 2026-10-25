@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using ScreenshotDirector.ViewModels;
 
@@ -51,6 +52,29 @@ public partial class MainWindow : Window
             // If not running in system tray, stopping window exits the program
             ViewModel?.StopProgram();
             base.OnClosing(e);
+        }
+    }
+
+    // Navigation Handlers
+    private void OnNavHomeClick(object sender, RoutedEventArgs e) => ViewModel?.NavigateTo("Home");
+    private void OnNavPresetsClick(object sender, RoutedEventArgs e) => ViewModel?.NavigateTo("Presets");
+    private void OnNavPopupClick(object sender, RoutedEventArgs e) => ViewModel?.NavigateTo("PopupSettings");
+    private void OnNavGeneralClick(object sender, RoutedEventArgs e) => ViewModel?.NavigateTo("GeneralSettings");
+    private void OnNavAboutClick(object sender, RoutedEventArgs e) => ViewModel?.NavigateTo("About");
+
+    private void OnGitHubClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/diaba1445-glitch/Screenshot-Director",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Could not open repository URL: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -155,5 +179,26 @@ public partial class MainWindow : Window
     private void OnClearSessionDefaultClick(object sender, RoutedEventArgs e)
     {
         ViewModel?.ClearSessionDefault();
+    }
+
+    private void OnClearRecentCapturesClick(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.ClearRecentCaptures();
+    }
+
+    private void OnOpenFileClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: RecentCaptureItem item })
+        {
+            ViewModel?.OpenFile(item.FilePath);
+        }
+    }
+
+    private void OnOpenFolderClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: RecentCaptureItem item })
+        {
+            ViewModel?.OpenFolder(item.DirectoryPath);
+        }
     }
 }

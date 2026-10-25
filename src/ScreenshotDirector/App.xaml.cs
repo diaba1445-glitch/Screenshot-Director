@@ -187,6 +187,7 @@ public partial class App : System.Windows.Application
                     _settingsService,
                     _startupManager,
                     _detectionService,
+                    _saveService,
                     ShutdownApp,
                     _logger);
 

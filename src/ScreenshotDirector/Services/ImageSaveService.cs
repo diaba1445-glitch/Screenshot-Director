@@ -9,6 +9,8 @@ namespace ScreenshotDirector.Services;
 
 public class ImageSaveService : IImageSaveService
 {
+    public event EventHandler<SaveResult>? ImageSaved;
+
     private readonly ICaptureDetectionService? _detectionService;
     private readonly IAppLogger _logger;
 
@@ -287,7 +289,9 @@ public class ImageSaveService : IImageSaveService
             }
         }
 
-        return SaveResult.Succeeded(targetFilePath, pathCopied);
+        var result = SaveResult.Succeeded(targetFilePath, pathCopied);
+        ImageSaved?.Invoke(this, result);
+        return result;
     }
 
     private static bool IsDiskFull(IOException ex)

@@ -5,6 +5,8 @@ namespace ScreenshotDirector.Core.Interfaces;
 
 public interface IImageSaveService
 {
+    event EventHandler<SaveResult>? ImageSaved;
+
     string GenerateDefaultFilename(string pattern);
     bool ValidateFilename(string filename, out string sanitizedOrError);
     string ResolveCollision(string targetDirectory, string baseFilename, CollisionPolicy policy);

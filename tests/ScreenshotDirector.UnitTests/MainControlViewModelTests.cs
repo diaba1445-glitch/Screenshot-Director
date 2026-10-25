@@ -173,4 +173,62 @@ public class MainControlViewModelTests : IDisposable
             Assert.True(receivedCandidate.Height > 0);
         });
     }
+
+    [Fact]
+    public void Navigation_UpdatesCurrentPageAndProperties()
+    {
+        var vm = new MainControlViewModel(_settingsService, _startupManager, _detectionService, null, _logger);
+
+        Assert.True(vm.IsHome);
+        Assert.Equal("Home", vm.CurrentPage);
+
+        vm.NavigateTo("Presets");
+        Assert.True(vm.IsPresets);
+        Assert.False(vm.IsHome);
+        Assert.Contains("Preset Folders", vm.PageTitle);
+
+        vm.NavigateTo("PopupSettings");
+        Assert.True(vm.IsPopupSettings);
+        Assert.Equal("Popup & Routing", vm.PageTitle);
+
+        vm.NavigateTo("GeneralSettings");
+        Assert.True(vm.IsGeneralSettings);
+        Assert.Equal("General & Permissions", vm.PageTitle);
+
+        vm.NavigateTo("About");
+        Assert.True(vm.IsAbout);
+        Assert.Contains("About", vm.PageTitle);
+    }
+
+    [Fact]
+    public void RecentCaptures_AddFilterAndClear_WorkCorrectly()
+    {
+        var testFilePath = Path.Combine(_tempDir, "TestScreenshot_2026.png");
+        File.WriteAllBytes(testFilePath, new byte[] { 1, 2, 3 });
+
+        var vm = new MainControlViewModel(_settingsService, _startupManager, _detectionService, null, _logger);
+        vm.ClearRecentCaptures();
+
+        Assert.False(vm.HasRecentCaptures);
+        Assert.Empty(vm.RecentCaptures);
+
+        vm.AddRecentCapture(testFilePath);
+
+        Assert.True(vm.HasRecentCaptures);
+        Assert.Single(vm.RecentCaptures);
+        Assert.Equal("TestScreenshot_2026.png", vm.RecentCaptures[0].Filename);
+
+        // Test search query filtering
+        vm.RecentSearchQuery = "NotFoundQuery";
+        Assert.Empty(vm.FilteredRecentCaptures);
+
+        vm.RecentSearchQuery = "TestScreenshot";
+        Assert.Single(vm.FilteredRecentCaptures);
+
+        // Test clear
+        vm.ClearRecentCaptures();
+        Assert.False(vm.HasRecentCaptures);
+        Assert.Empty(vm.RecentCaptures);
+    }
 }
+

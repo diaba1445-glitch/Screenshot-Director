@@ -3,68 +3,43 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:ScreenshotDirector.ViewModels"
+        xmlns:local="clr-namespace:ScreenshotDirector.Views"
         mc:Ignorable="d"
-        Title="Screenshot Director — Control Center" 
-        Height="640" Width="800"
-        MinHeight="560" MinWidth="720"
+        Title="Screenshot Director" 
+        Height="680" Width="960"
+        MinHeight="600" MinWidth="860"
         WindowStartupLocation="CenterScreen"
-        Background="#121214" 
+        Background="#0E0D13" 
         Foreground="#F4F4F5"
         FontFamily="Segoe UI"
         ResizeMode="CanResizeWithGrip">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+        <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisConverter"/>
 
-        <!-- Custom Dark ScrollBar and Control Styles -->
-        <Style TargetType="TabItem">
-            <Setter Property="Foreground" Value="#A1A1AA"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Padding" Value="16,10"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="border" Background="#18181B" BorderBrush="#27272A" BorderThickness="1,1,1,0" CornerRadius="6,6,0,0" Margin="0,0,4,0" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1F1F23"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#007ACC"/>
-                                <Setter Property="Foreground" Value="#38BDF8"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
+        <!-- Primary Accent Purple Button -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#007ACC"/>
+            <Setter Property="Background" Value="#7C3AED"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Padding" Value="14,8"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#0098FF"/>
+                                <Setter TargetName="border" Property="Background" Value="#8B5CF6"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#005A9E"/>
+                                <Setter TargetName="border" Property="Background" Value="#6D28D9"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -72,24 +47,29 @@
             </Setter>
         </Style>
 
+        <!-- Secondary Dark Button -->
         <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#27272A"/>
-            <Setter Property="Foreground" Value="#E4E4E7"/>
+            <Setter Property="Background" Value="#1E1C2B"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="BorderBrush" Value="#2F2B45"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#3F3F46"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#52525B"/>
+                                <Setter TargetName="border" Property="Background" Value="#2B283E"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#443E63"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#181624"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -97,24 +77,56 @@
             </Setter>
         </Style>
 
+        <!-- Danger Red Button -->
         <Style x:Key="DangerButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#2D1515"/>
+            <Setter Property="Background" Value="#29151A"/>
             <Setter Property="Foreground" Value="#F87171"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="BorderBrush" Value="#7F1D1D"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="BorderBrush" Value="#52202B"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#991B1B"/>
+                                <Setter TargetName="border" Property="Background" Value="#7F1D1D"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#551212"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Action Pill Item Button (Open File / Open Folder) -->
+        <Style x:Key="ItemActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E1C2B"/>
+            <Setter Property="Foreground" Value="#D4D4D8"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="BorderBrush" Value="#312D49"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2D2942"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4C466D"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -123,6 +135,101 @@
             </Setter>
         </Style>
 
+        <!-- Navigation Button Template -->
+        <ControlTemplate x:Key="NavButtonTemplate" TargetType="Button">
+            <Border x:Name="navBorder" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="navBorder" Property="Background" Value="#1D1A2B"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <!-- Nav Item Styles with Active Binding DataTriggers -->
+        <Style x:Key="NavHomeStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template" Value="{StaticResource NavButtonTemplate}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsHome}" Value="True">
+                    <Setter Property="Background" Value="#28223E"/>
+                    <Setter Property="Foreground" Value="#C084FC"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NavPresetsStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template" Value="{StaticResource NavButtonTemplate}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPresets}" Value="True">
+                    <Setter Property="Background" Value="#28223E"/>
+                    <Setter Property="Foreground" Value="#C084FC"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NavPopupStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template" Value="{StaticResource NavButtonTemplate}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPopupSettings}" Value="True">
+                    <Setter Property="Background" Value="#28223E"/>
+                    <Setter Property="Foreground" Value="#C084FC"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NavGeneralStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template" Value="{StaticResource NavButtonTemplate}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsGeneralSettings}" Value="True">
+                    <Setter Property="Background" Value="#28223E"/>
+                    <Setter Property="Foreground" Value="#C084FC"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NavAboutStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3AF"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template" Value="{StaticResource NavButtonTemplate}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAbout}" Value="True">
+                    <Setter Property="Background" Value="#28223E"/>
+                    <Setter Property="Foreground" Value="#C084FC"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Dark ComboBox Template -->
         <ControlTemplate x:Key="DarkComboBoxTemplate" TargetType="ComboBox">
             <Grid x:Name="MainGrid" SnapsToDevicePixels="True">
                 <Grid.ColumnDefinitions>
@@ -144,7 +251,7 @@
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="5">
+                                    CornerRadius="6">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -152,7 +259,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Path x:Name="Arrow"
                                           Grid.Column="1"
-                                          Fill="#38BDF8"
+                                          Fill="#C084FC"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
                                           Data="M 0 0 L 4 4 L 8 0 Z"/>
@@ -160,12 +267,8 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="tbBorder" Property="BorderBrush" Value="#0284C7"/>
-                                    <Setter TargetName="tbBorder" Property="Background" Value="#25252D"/>
-                                </Trigger>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="tbBorder" Property="BorderBrush" Value="#38BDF8"/>
-                                    <Setter TargetName="tbBorder" Property="Background" Value="#22222A"/>
+                                    <Setter TargetName="tbBorder" Property="BorderBrush" Value="#A855F7"/>
+                                    <Setter TargetName="tbBorder" Property="Background" Value="#242136"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -177,7 +280,7 @@
                                   Content="{TemplateBinding SelectionBoxItem}"
                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                   ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                  Margin="10,5,28,5"
+                                  Margin="10,6,28,6"
                                   VerticalAlignment="Center"
                                   HorizontalAlignment="Left"/>
 
@@ -188,10 +291,10 @@
                        Placement="Bottom"
                        PopupAnimation="Slide">
                     <Border x:Name="DropDownBorder"
-                            Background="#18181B"
-                            BorderBrush="#3F3F46"
+                            Background="#181626"
+                            BorderBrush="#363152"
                             BorderThickness="1"
-                            CornerRadius="5"
+                            CornerRadius="6"
                             MinWidth="{Binding ActualWidth, ElementName=MainGrid}"
                             MaxHeight="{TemplateBinding MaxDropDownHeight}"
                             Margin="0,2,0,0">
@@ -204,9 +307,9 @@
         </ControlTemplate>
 
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#18181B"/>
+            <Setter Property="Background" Value="#181626"/>
             <Setter Property="Foreground" Value="#F4F4F5"/>
-            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Padding" Value="10,8"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -217,12 +320,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="itemBorder" Property="Background" Value="#0284C7"/>
+                                <Setter TargetName="itemBorder" Property="Background" Value="#2E2849"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="itemBorder" Property="Background" Value="#0C4A6E"/>
-                                <Setter Property="Foreground" Value="#38BDF8"/>
+                                <Setter TargetName="itemBorder" Property="Background" Value="#3B2D62"/>
+                                <Setter Property="Foreground" Value="#DDD6FE"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -231,8 +334,8 @@
         </Style>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#1E1E24"/>
-            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="Background" Value="#171524"/>
+            <Setter Property="BorderBrush" Value="#2F2B48"/>
             <Setter Property="Foreground" Value="#F4F4F5"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Template" Value="{StaticResource DarkComboBoxTemplate}"/>
@@ -256,11 +359,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="lbBorder" Property="Background" Value="#222227"/>
+                                <Setter TargetName="lbBorder" Property="Background" Value="#201E30"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="lbBorder" Property="Background" Value="#172554"/>
-                                <Setter TargetName="lbBorder" Property="BorderBrush" Value="#0284C7"/>
+                                <Setter TargetName="lbBorder" Property="Background" Value="#2A2447"/>
+                                <Setter TargetName="lbBorder" Property="BorderBrush" Value="#7C3AED"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -269,103 +372,316 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="18">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Top App Header & Live Status -->
-            <RowDefinition Height="Auto"/> <!-- Onboarding Banner (if first run) -->
-            <RowDefinition Height="*"/>    <!-- Tabs / Main Configuration -->
-            <RowDefinition Height="Auto"/> <!-- Bottom Action & Status Footer -->
-        </Grid.RowDefinitions>
+    <!-- Main Window Grid: Left Sidebar + Right Content Area -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230"/> <!-- Left Sidebar -->
+            <ColumnDefinition Width="*"/>   <!-- Main Content Panel -->
+        </Grid.ColumnDefinitions>
 
-        <!-- Top Header & Live Status -->
-        <Grid Grid.Row="0" Margin="0,0,0,14">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- ==================== LEFT SIDEBAR ==================== -->
+        <Border Grid.Column="0" Background="#12111A" BorderBrush="#1F1D2B" BorderThickness="0,0,1,0">
+            <Grid Margin="16,18,16,18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Brand Header -->
+                    <RowDefinition Height="*"/>    <!-- Navigation Menu Items -->
+                    <RowDefinition Height="Auto"/> <!-- Sidebar Footer -->
+                </Grid.RowDefinitions>
 
-            <!-- App Title & Subtitle -->
-            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="📸" FontSize="22" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Screenshot Director" FontSize="20" FontWeight="Bold" Foreground="#38BDF8" VerticalAlignment="Center"/>
-                    <Border Background="#1E293B" BorderBrush="#0369A1" BorderThickness="1" CornerRadius="4" Margin="10,0,0,0" Padding="6,2" VerticalAlignment="Center">
-                        <TextBlock Text="Control Center" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8"/>
-                    </Border>
+                <!-- Brand Header (Logo + Title + Tagline) -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,24">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Circular Gradient Logo Badge -->
+                        <Border Grid.Column="0" Width="38" Height="38" CornerRadius="19" Margin="0,0,12,0" VerticalAlignment="Center">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#8B5CF6" Offset="0.0"/>
+                                    <GradientStop Color="#6366F1" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <TextBlock Text="📸" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Screenshot Director" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="Instant screenshot router" FontSize="11" Foreground="#8E8A9F" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
-                <TextBlock Text="Instant screenshot routing to custom preset folders (Keys 1–9) with lossless PNG encoding." 
-                           FontSize="12" Foreground="#A1A1AA" Margin="32,2,0,0"/>
-            </StackPanel>
 
-            <!-- Status Badge & Control Buttons -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <!-- Status Badge -->
-                <Border Background="#1C1917" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,10,0" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse Width="9" Height="9" Fill="{Binding DetectionStatusBadgeColor}" Margin="0,0,6,0"/>
-                        <TextBlock Text="{Binding DetectionStatusText}" FontWeight="SemiBold" FontSize="12" Foreground="#F4F4F5"/>
-                    </StackPanel>
-                </Border>
+                <!-- Navigation Menu Items -->
+                <StackPanel Grid.Row="1">
+                    <!-- Home -->
+                    <Button Style="{StaticResource NavHomeStyle}" Click="OnNavHomeClick" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🏠" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="Home" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                <!-- Pause / Resume Toggle -->
-                <Button Content="{Binding PauseResumeButtonText}" Click="OnTogglePauseClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                    <!-- Presets -->
+                    <Button Style="{StaticResource NavPresetsStyle}" Click="OnNavPresetsClick" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📁" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="Presets" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                <!-- Stop Program -->
-                <Button Content="🛑 Stop Program" Click="OnStopProgramClick" Style="{StaticResource DangerButtonStyle}" ToolTip="Completely stops the background listener and exits"/>
-            </StackPanel>
-        </Grid>
+                    <!-- Popup & Routing -->
+                    <Button Style="{StaticResource NavPopupStyle}" Click="OnNavPopupClick" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🎯" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="Popup &amp; Routing" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-        <!-- Onboarding / Welcome Setup Banner (shown when first run or no presets) -->
-        <Border Grid.Row="1" 
-                Visibility="{Binding ShowOnboardingGuide, Converter={StaticResource BoolToVisConverter}}"
-                Background="#0F172A" BorderBrush="#0284C7" BorderThickness="1.5" CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
-            <Grid>
+                    <!-- General & Permissions -->
+                    <Button Style="{StaticResource NavGeneralStyle}" Click="OnNavGeneralClick" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙️" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="General" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- About -->
+                    <Button Style="{StaticResource NavAboutStyle}" Click="OnNavAboutClick" Margin="0,0,0,4">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="ℹ️" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="About" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Sidebar Footer (GitHub Button & Version) -->
+                <StackPanel Grid.Row="2">
+                    <Button Click="OnGitHubClick" Style="{StaticResource SecondaryButtonStyle}" Padding="10,6" Margin="0,0,0,10" HorizontalContentAlignment="Left">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🐙" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="GitHub Repo" FontSize="12" VerticalAlignment="Center" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="Version 1.2.0" FontSize="11" Foreground="#656277" Margin="4,0,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== RIGHT MAIN CONTENT PANEL ==================== -->
+        <Grid Grid.Column="1" Margin="24,20,24,18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Page Header -->
+                <RowDefinition Height="*"/>    <!-- Page Dynamic Content -->
+                <RowDefinition Height="Auto"/> <!-- Status & Action Bar -->
+            </Grid.RowDefinitions>
+
+            <!-- Page Header: Title, Subtitle, and Detection Status Badge -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="👋 Welcome! Configure your screenshot destination presets" FontWeight="Bold" FontSize="14" Foreground="#38BDF8"/>
-                    <TextBlock Text="When you press Win+Shift+S or PrtScn, a routing popup appears near your cursor mapping your folders to keys 1–9. Customize your preset folders below to get started!" 
-                               FontSize="12" Foreground="#CBD5E1" Margin="0,3,0,6" TextWrapping="Wrap"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Quick Templates:" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Button Content="+ Screenshots" Click="OnAddTemplateScreenshotsClick" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11" Margin="0,0,6,0"/>
-                        <Button Content="+ Desktop" Click="OnAddTemplateDesktopClick" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11" Margin="0,0,6,0"/>
-                        <Button Content="+ Downloads" Click="OnAddTemplateDownloadsClick" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11" Margin="0,0,6,0"/>
-                    </StackPanel>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PageTitle}" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF"/>
+                    <TextBlock Text="{Binding PageSubtitle}" FontSize="12" Foreground="#8E8A9F" Margin="0,2,0,0"/>
                 </StackPanel>
-                <Button Grid.Column="1" Content="✓ Confirm &amp; Activate Presets" Click="OnSaveClick" Style="{StaticResource PrimaryButtonStyle}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+
+                <!-- Live Detection Badge & Quick Pause -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#161421" BorderBrush="#262338" BorderThickness="1" CornerRadius="6" Padding="10,5" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="8" Height="8" Fill="{Binding DetectionStatusBadgeColor}" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding DetectionStatusText}" FontWeight="SemiBold" FontSize="11" Foreground="#F4F4F5"/>
+                        </StackPanel>
+                    </Border>
+                    <Button Content="{Binding PauseResumeButtonText}" Click="OnTogglePauseClick" Style="{StaticResource SecondaryButtonStyle}" Padding="10,5" FontSize="11" Margin="0,0,6,0"/>
+                    <Button Content="🛑 Stop" Click="OnStopProgramClick" Style="{StaticResource DangerButtonStyle}" Padding="10,5" FontSize="11"/>
+                </StackPanel>
             </Grid>
-        </Border>
 
-        <!-- Main Content Tabs -->
-        <TabControl Grid.Row="2" Background="#18181B" BorderBrush="#27272A" BorderThickness="1">
+            <!-- Page Dynamic Content -->
+            <Grid Grid.Row="1">
 
-            <!-- TAB 1: Preset Folders -->
-            <TabItem Header="📁 Preset Folders (Keys 1–9)">
-                <Grid Margin="14">
+                <!-- #################### 1. HOME VIEW #################### -->
+                <Grid Visibility="{Binding IsHome, Converter={StaticResource BoolToVisConverter}}">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/> <!-- Description bar -->
+                        <RowDefinition Height="Auto"/> <!-- Hero Action Card -->
+                        <RowDefinition Height="Auto"/> <!-- Recent Section Header & Search -->
+                        <RowDefinition Height="*"/>    <!-- Recent Captures List -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Hero Card: Live Screenshot Listening / Quick Actions -->
+                    <Border Grid.Row="0" Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="12" Padding="20,18" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Centered Upload/Camera Badge & Instructions -->
+                            <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                <Border Width="48" Height="48" CornerRadius="24" Background="#26203F" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                    <TextBlock Text="⬆" FontSize="20" FontWeight="Bold" Foreground="#A855F7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Ready to Route Screenshots" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Press Win+Shift+S or PrtScn anywhere. The router popup appears instantly at your chosen screen location." 
+                                           FontSize="12" Foreground="#8E8A9F" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <!-- Quick Action Buttons -->
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
+                                <Button Content="🧪 Test Capture Popup" Click="OnTestPopupClick" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" ToolTip="Preview the routing popup at your cursor"/>
+                                <Button Content="{Binding PauseResumeButtonText}" Click="OnTogglePauseClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
+                                <Button Content="📁 View Presets" Click="OnNavPresetsClick" Style="{StaticResource SecondaryButtonStyle}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Recent Captures Header & Search Bar -->
+                    <Grid Grid.Row="1" Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header Row (Title & Clear button) -->
+                        <Grid Grid.Row="0" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Recent captures" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Clear" Click="OnClearRecentCapturesClick" Background="Transparent" Foreground="#8E8A9F" BorderThickness="0" Cursor="Hand" FontSize="12">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+
+                        <!-- Search Bar -->
+                        <Border Grid.Row="1" Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Height="36" Padding="10,0">
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🔍" FontSize="12" Foreground="#8E8A9F" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Text="{Binding RecentSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                         Background="Transparent" Foreground="#FFFFFF" BorderThickness="0" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Search captures..." Foreground="#5B5770" FontSize="12" IsHitTestVisible="False" VerticalAlignment="Center"
+                                           Visibility="{Binding RecentSearchQuery, Converter={StaticResource EmptyStringToVisConverter}}"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Recent Captures List -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- List of Recent Items -->
+                            <ItemsControl ItemsSource="{Binding FilteredRecentCaptures}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="42"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Thumbnail / Icon Box -->
+                                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="6" Background="#211E33" BorderBrush="#322E4D" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Grid>
+                                                        <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="🖼" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                   Visibility="{Binding Thumbnail, Converter={StaticResource InverseBoolToVisConverter}}"/>
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- Filename & Details -->
+                                                <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding DirectoryPath}" Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Margin="0,1,0,0" FontSize="10" Foreground="#656277">
+                                                        <Run Text="{Binding DisplayTime}"/>
+                                                        <Run Text=" · "/>
+                                                        <Run Text="{Binding DisplaySize}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <!-- Action Buttons: Open File & Open Folder -->
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="📄 Open file" Click="OnOpenFileClick" Style="{StaticResource ItemActionButtonStyle}" Margin="0,0,6,0"/>
+                                                    <Button Content="📂 Open folder" Click="OnOpenFolderClick" Style="{StaticResource ItemActionButtonStyle}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Empty State Notice when no captures match -->
+                            <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="24" Margin="0,4,0,0"
+                                    Visibility="{Binding HasRecentCaptures, Converter={StaticResource InverseBoolToVisConverter}}">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="📸" FontSize="26" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                                    <TextBlock Text="No screenshots captured yet in this session" FontWeight="SemiBold" FontSize="13" Foreground="#DDD6FE" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Capture any screenshot using Win+Shift+S or PrtScn to route and view it here." FontSize="11" Foreground="#8E8A9F" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- #################### 2. PRESETS VIEW #################### -->
+                <Grid Visibility="{Binding IsPresets, Converter={StaticResource BoolToVisConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Summary / Templates -->
                         <RowDefinition Height="*"/>    <!-- Presets list & tools -->
                         <RowDefinition Height="Auto"/> <!-- Edit selected form -->
                     </Grid.RowDefinitions>
 
-                    <!-- Header & Summary -->
-                    <Grid Grid.Row="0" Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="{Binding DestinationsCountSummary}" FontWeight="SemiBold" FontSize="13" Foreground="#38BDF8"/>
-                            <TextBlock Text="Pressing 1 saves to Destination 1, 2 to Destination 2, etc. Drag or move up/down to reorder." FontSize="11" Foreground="#A1A1AA"/>
-                        </StackPanel>
-                        <Button Grid.Column="1" Content="🧪 Test Capture Popup" Click="OnTestPopupClick" Style="{StaticResource SecondaryButtonStyle}" ToolTip="Preview the routing popup near your cursor with these presets"/>
-                    </Grid>
+                    <!-- Summary & Quick Templates -->
+                    <Border Grid.Row="0" Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="{Binding DestinationsCountSummary}" FontWeight="SemiBold" FontSize="13" Foreground="#C084FC"/>
+                                <TextBlock Text="Pressing 1 saves to Destination 1, 2 to Destination 2, etc. Drag or move up/down to reorder." FontSize="11" Foreground="#8E8A9F" Margin="0,2,0,6"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Quick Templates:" FontSize="11" Foreground="#7C7895" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <Button Content="+ Screenshots" Click="OnAddTemplateScreenshotsClick" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11" Margin="0,0,6,0"/>
+                                    <Button Content="+ Desktop" Click="OnAddTemplateDesktopClick" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11" Margin="0,0,6,0"/>
+                                    <Button Content="+ Downloads" Click="OnAddTemplateDownloadsClick" Style="{StaticResource SecondaryButtonStyle}" Padding="8,3" FontSize="11"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="🧪 Test Popup" Click="OnTestPopupClick" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
 
                     <!-- Presets List & Controls -->
-                    <Grid Grid.Row="1" Margin="0,0,0,10">
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="130"/>
@@ -375,8 +691,8 @@
                         <ListBox Grid.Column="0" 
                                  ItemsSource="{Binding Destinations}" 
                                  SelectedItem="{Binding SelectedDestination}"
-                                 Background="#121214" 
-                                 BorderBrush="#27272A" 
+                                 Background="#161422" 
+                                 BorderBrush="#252238" 
                                  Margin="0,0,10,0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -388,14 +704,14 @@
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Badge 1-9 -->
-                                        <Border Grid.Column="0" Background="#007ACC" CornerRadius="4" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Border Grid.Column="0" Background="#7C3AED" CornerRadius="4" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding ShortcutNumber}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
 
                                         <!-- Name & Path -->
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#F4F4F5" FontSize="13"/>
-                                            <TextBlock Text="{Binding Path}" Foreground="#71717A" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Path}" Foreground="#7C7895" FontSize="11" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
 
                                         <!-- Checkbox Enabled -->
@@ -408,10 +724,10 @@
                         <!-- Presets Side Actions -->
                         <StackPanel Grid.Column="1">
                             <Button Content="➕ Add Folder" Click="OnAddCustomDestinationClick" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,6"/>
-                            <Button Content="📂 Browse Folder..." Click="OnBrowseNewDestinationClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6"/>
+                            <Button Content="📂 Browse..." Click="OnBrowseNewDestinationClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6"/>
                             <Button Content="🗑 Remove" Click="OnRemoveDestinationClick" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,10"/>
 
-                            <Separator Background="#27272A" Margin="0,0,0,10"/>
+                            <Separator Background="#252238" Margin="0,0,0,10"/>
 
                             <Button Content="▲ Move Up" Click="OnMoveUpClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6" ToolTip="Move up (advances shortcut number)"/>
                             <Button Content="▼ Move Down" Click="OnMoveDownClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6" ToolTip="Move down"/>
@@ -419,7 +735,7 @@
                     </Grid>
 
                     <!-- Edit Selected Preset Form -->
-                    <Border Grid.Row="2" Background="#1F1F23" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="12">
+                    <Border Grid.Row="2" Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="12">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -431,199 +747,286 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Preset Name:" VerticalAlignment="Center" Margin="0,0,10,8" Foreground="#D4D4D8" FontSize="12"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedDestination.Name, UpdateSourceTrigger=PropertyChanged}" Background="#121214" Foreground="#FFFFFF" BorderBrush="#3F3F46" Padding="6,4" Margin="0,0,8,8"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Preset Name:" VerticalAlignment="Center" Margin="0,0,10,8" Foreground="#DDD6FE" FontSize="12"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedDestination.Name, UpdateSourceTrigger=PropertyChanged}" Background="#0E0D13" Foreground="#FFFFFF" BorderBrush="#2F2B48" Padding="6,4" Margin="0,0,8,8"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Folder Path:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#D4D4D8" FontSize="12"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDestination.Path, UpdateSourceTrigger=PropertyChanged}" Background="#121214" Foreground="#FFFFFF" BorderBrush="#3F3F46" Padding="6,4" Margin="0,0,8,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Folder Path:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#DDD6FE" FontSize="12"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDestination.Path, UpdateSourceTrigger=PropertyChanged}" Background="#0E0D13" Foreground="#FFFFFF" BorderBrush="#2F2B48" Padding="6,4" Margin="0,0,8,0"/>
                             <Button Grid.Row="1" Grid.Column="2" Content="Browse..." Click="OnBrowsePathClick" Style="{StaticResource SecondaryButtonStyle}" Padding="10,4"/>
                         </Grid>
                     </Border>
                 </Grid>
-            </TabItem>
 
-            <!-- TAB 2: Permissions & System Status -->
-            <TabItem Header="🛡️ Permissions &amp; System">
-                <StackPanel Margin="18">
-                    <!-- Native Clipboard Permission -->
-                    <Border Background="#1F1F23" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Native Clipboard Format Listener" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
-                                <TextBlock Text="Listens for native Windows WM_CLIPBOARDUPDATE messages. Never records text, passwords, or personal data." Foreground="#A1A1AA" FontSize="11" Margin="0,2,0,0"/>
+                <!-- #################### 3. POPUP & ROUTING VIEW #################### -->
+                <ScrollViewer Visibility="{Binding IsPopupSettings, Converter={StaticResource BoolToVisConverter}}" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Session Default Folder Card -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="📌 Session Default Folder (Quick-Route)" FontWeight="SemiBold" Foreground="#C084FC" FontSize="13"/>
+                                        <Border Background="#2A1B4E" BorderBrush="#7C3AED" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                Visibility="{Binding HasSessionDefault, Converter={StaticResource BoolToVisConverter}}">
+                                            <TextBlock Text="Active" FontSize="10" FontWeight="SemiBold" Foreground="#DDD6FE"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding SessionDefaultDisplayPath}" Foreground="#F4F4F5" FontSize="12" Margin="0,4,0,2" FontWeight="Medium"/>
+                                    <TextBlock Text="When set, screenshots auto-route with a quick collapsed toast (3s) so you aren't asked every time. Click Expand in the toast for exceptions." 
+                                               Foreground="#8E8A9F" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                                    <Button Content="📂 Set Folder..." Click="OnSetSessionDefaultClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,0"/>
+                                    <Button Content="✕ Clear" Click="OnClearSessionDefaultClick" Style="{StaticResource DangerButtonStyle}" IsEnabled="{Binding HasSessionDefault}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Screen Position & Auto-Dismiss -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="Toast Popup Appearance &amp; Screen Position" FontWeight="SemiBold" Foreground="#DDD6FE" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Screen Position:" Foreground="#F4F4F5" VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Column="1" 
+                                              ItemsSource="{Binding AvailablePopupPositions}" 
+                                              SelectedItem="{Binding PopupPosition}"/>
+                                    <TextBlock Grid.Column="2" Text="(Toast anchor on desktop)" Foreground="#8E8A9F" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Auto-Dismiss Timeout (sec):" Foreground="#F4F4F5" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1" Text="{Binding PopupTimeoutSeconds}" Background="#0E0D13" Foreground="#FFFFFF" BorderBrush="#2F2B48" Padding="4" TextAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="(1–60s, automatically pauses when renaming filename)" Foreground="#8E8A9F" FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                </Grid>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="#064E3B" BorderBrush="#059669" BorderThickness="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
-                                <TextBlock Text="🟢 Granted &amp; Active" FontWeight="SemiBold" FontSize="11" Foreground="#34D399"/>
-                            </Border>
-                        </Grid>
-                    </Border>
+                        </Border>
 
-                    <!-- Windows Startup Registration -->
-                    <Border Background="#1F1F23" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <CheckBox IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center">
+                        <!-- Routing Behaviors -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="Routing Behaviors" FontWeight="SemiBold" Foreground="#DDD6FE" Margin="0,0,0,10"/>
+
+                                <CheckBox IsChecked="{Binding CopySavedPathToClipboard}" Margin="0,0,0,12">
                                     <StackPanel Margin="6,0,0,0">
-                                        <TextBlock Text="Start automatically with Windows" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
-                                        <TextBlock Text="Launches minimized to tray on user login (HKCU Run key, no admin privileges required)." Foreground="#A1A1AA" FontSize="11" Margin="0,2,0,0"/>
+                                        <TextBlock Text="Copy saved file path to clipboard" FontWeight="SemiBold" Foreground="#F4F4F5"/>
+                                        <TextBlock Text="Places the absolute file path on clipboard ready to paste into Slack, Discord, or code." Foreground="#8E8A9F" FontSize="11"/>
+                                    </StackPanel>
+                                </CheckBox>
+
+                                <CheckBox IsChecked="{Binding AllowQuickRename}" Margin="0,0,0,12">
+                                    <StackPanel Margin="6,0,0,0">
+                                        <TextBlock Text="Allow quick filename renaming in popup" FontWeight="SemiBold" Foreground="#F4F4F5"/>
+                                        <TextBlock Text="Displays an editable rename box in the toast popup (starts empty for fast typing)." Foreground="#8E8A9F" FontSize="11"/>
+                                    </StackPanel>
+                                </CheckBox>
+
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="Default Filename Pattern:" Foreground="#F4F4F5" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding DefaultFilenamePattern}" Background="#0E0D13" Foreground="#FFFFFF" BorderBrush="#2F2B48" Padding="6,4" Width="380" HorizontalAlignment="Left"/>
+                                    <TextBlock Text="Format supports timestamp: Screenshot_yyyy-MM-dd_HH-mm-ss.png" Foreground="#656277" FontSize="11" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Web Filtering Policy -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14">
+                            <StackPanel>
+                                <TextBlock Text="Detection Policy &amp; Web Filtering" FontWeight="SemiBold" Foreground="#DDD6FE"/>
+                                <TextBlock Text="Conservative Mode filters browser image copies and Office embeddings to prevent accidental popups." 
+                                           Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,8" TextWrapping="Wrap"/>
+                                <CheckBox IsChecked="{Binding GenericImageFallbackEnabled}">
+                                    <StackPanel Margin="6,0,0,0">
+                                        <TextBlock Text="Enable Generic Image Fallback" Foreground="#F4F4F5"/>
+                                        <TextBlock Text="Also route general images copied from external image viewers or graphic software." Foreground="#656277" FontSize="11"/>
                                     </StackPanel>
                                 </CheckBox>
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{Binding StartupPermissionText}" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- System Tray Minimization -->
-                    <Border Background="#1F1F23" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
-                        <CheckBox IsChecked="{Binding RunInSystemTray}">
-                            <StackPanel Margin="6,0,0,0">
-                                <TextBlock Text="Keep active in system tray when window is closed" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
-                                <TextBlock Text="Closing this window will hide it to the system tray so screenshots can still be routed. To exit completely, click 'Stop Program'." Foreground="#A1A1AA" FontSize="11" Margin="0,2,0,0"/>
-                            </StackPanel>
-                        </CheckBox>
-                    </Border>
-
-                    <!-- Single Instance Lock -->
-                    <Border Background="#1F1F23" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="14">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Single-Instance Mutex Enforcement" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
-                                <TextBlock Text="Prevents multiple conflicting background instances. Launching a second instance signals and activates this window." Foreground="#A1A1AA" FontSize="11" Margin="0,2,0,0"/>
-                            </StackPanel>
-                            <Border Grid.Column="1" Background="#064E3B" BorderBrush="#059669" BorderThickness="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
-                                <TextBlock Text="🟢 Mutex Acquired" FontWeight="SemiBold" FontSize="11" Foreground="#34D399"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-            </TabItem>
-
-            <!-- TAB 3: Routing & Detection Preferences -->
-            <TabItem Header="⚙️ Routing &amp; Preferences">
-                <StackPanel Margin="18">
-                    <!-- Copy Path Checkbox -->
-                    <CheckBox IsChecked="{Binding CopySavedPathToClipboard}" Margin="0,0,0,14">
-                        <StackPanel Margin="6,0,0,0">
-                            <TextBlock Text="Copy saved file path to clipboard" FontWeight="SemiBold" Foreground="#F4F4F5"/>
-                            <TextBlock Text="Places the absolute file path on the clipboard ready to paste into Slack, Discord, or browser." Foreground="#A1A1AA" FontSize="11"/>
-                        </StackPanel>
-                    </CheckBox>
-
-                    <!-- Quick Rename Checkbox -->
-                    <CheckBox IsChecked="{Binding AllowQuickRename}" Margin="0,0,0,14">
-                        <StackPanel Margin="6,0,0,0">
-                            <TextBlock Text="Allow quick filename renaming in popup" FontWeight="SemiBold" Foreground="#F4F4F5"/>
-                            <TextBlock Text="Displays an editable filename field in the routing popup." Foreground="#A1A1AA" FontSize="11"/>
-                        </StackPanel>
-                    </CheckBox>
-
-                    <!-- Popup Timeout -->
-                    <Grid Margin="0,0,0,14">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="70"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Popup auto-dismiss timeout (seconds):" Foreground="#F4F4F5" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBox Grid.Column="1" Text="{Binding PopupTimeoutSeconds}" Background="#121214" Foreground="#FFFFFF" BorderBrush="#3F3F46" Padding="4" TextAlignment="Center"/>
-                        <TextBlock Grid.Column="2" Text="(1–60 seconds, auto-pauses when renaming filename)" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                    </Grid>
-
-                    <!-- Popup Screen Position -->
-                    <Grid Margin="0,0,0,14">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="180"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Popup Screen Position:" Foreground="#F4F4F5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox Grid.Column="1" 
-                                  ItemsSource="{Binding AvailablePopupPositions}" 
-                                  SelectedItem="{Binding PopupPosition}"
-                                  Padding="6,4"/>
-                        <TextBlock Grid.Column="2" Text="(Fixed toast at BottomRight, TopRight, BottomCenter, or CursorAdjacent)" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                    </Grid>
-
-                    <!-- Active Session Default Folder -->
-                    <Border Background="#1C1C22" BorderBrush="#2D2D38" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,14">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="📌 Session Default Folder (Quick-Route)" FontWeight="SemiBold" Foreground="#38BDF8"/>
-                                    <Border Background="#0C4A6E" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center"
-                                            Visibility="{Binding HasSessionDefault, Converter={StaticResource BoolToVisConverter}}">
-                                        <TextBlock Text="Active" FontSize="10" FontWeight="SemiBold" Foreground="#7DD3FC"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="{Binding SessionDefaultDisplayPath}" Foreground="#F4F4F5" FontSize="12" Margin="0,4,0,2" FontWeight="Medium"/>
-                                <TextBlock Text="When set, screenshots auto-route with a quick collapsed toast (3s) so you aren't asked every time. Click Expand in the toast for exceptions." 
-                                           Foreground="#A1A1AA" FontSize="11" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
-                                <Button Content="📂 Set Folder..." Click="OnSetSessionDefaultClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,0"/>
-                                <Button Content="✕ Clear" Click="OnClearSessionDefaultClick" Style="{StaticResource DangerButtonStyle}" IsEnabled="{Binding HasSessionDefault}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Filename Template -->
-                    <StackPanel Margin="0,0,0,14">
-                        <TextBlock Text="Default Filename Pattern:" Foreground="#F4F4F5" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding DefaultFilenamePattern}" Background="#121214" Foreground="#FFFFFF" BorderBrush="#3F3F46" Padding="6,4" Width="380" HorizontalAlignment="Left"/>
-                        <TextBlock Text="Format supports timestamp template: Screenshot_yyyy-MM-dd_HH-mm-ss.png" Foreground="#71717A" FontSize="11" Margin="0,2,0,0"/>
+                        </Border>
                     </StackPanel>
+                </ScrollViewer>
 
-                    <!-- Detection Policy -->
-                    <Border Background="#1F1F23" BorderBrush="#27272A" BorderThickness="1" CornerRadius="6" Padding="12">
-                        <StackPanel>
-                            <TextBlock Text="Detection Policy &amp; Web Filtering" FontWeight="SemiBold" Foreground="#38BDF8"/>
-                            <TextBlock Text="By default (Conservative Mode), browser image copies (Right click -> Copy Image) and Office embeddings are filtered to prevent accidental popups." 
-                                       Foreground="#A1A1AA" FontSize="11" Margin="0,2,0,8" TextWrapping="Wrap"/>
-                            <CheckBox IsChecked="{Binding GenericImageFallbackEnabled}">
+                <!-- #################### 4. GENERAL & SYSTEM VIEW #################### -->
+                <ScrollViewer Visibility="{Binding IsGeneralSettings, Converter={StaticResource BoolToVisConverter}}" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Native Clipboard Permission -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Native Clipboard Format Listener" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
+                                    <TextBlock Text="Listens for native Windows WM_CLIPBOARDUPDATE messages. Never records text, passwords, or personal data." Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#064E3B" BorderBrush="#059669" BorderThickness="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
+                                    <TextBlock Text="🟢 Granted &amp; Active" FontWeight="SemiBold" FontSize="11" Foreground="#34D399"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Windows Startup Registration -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <CheckBox IsChecked="{Binding StartWithWindows}" VerticalAlignment="Center">
+                                        <StackPanel Margin="6,0,0,0">
+                                            <TextBlock Text="Start automatically with Windows" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
+                                            <TextBlock Text="Launches minimized to tray on user login (HKCU Run key, no admin privileges required)." Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding StartupPermissionText}" Foreground="#8E8A9F" FontSize="11" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- System Tray Minimization -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,12">
+                            <CheckBox IsChecked="{Binding RunInSystemTray}">
                                 <StackPanel Margin="6,0,0,0">
-                                    <TextBlock Text="Enable Generic Image Fallback" Foreground="#F4F4F5"/>
-                                    <TextBlock Text="Also route general images copied from external image viewers or graphic software." Foreground="#71717A" FontSize="11"/>
+                                    <TextBlock Text="Keep active in system tray when window is closed" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
+                                    <TextBlock Text="Closing this window will hide it to the system tray so screenshots can still be routed. To exit completely, click 'Stop Program'." Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </CheckBox>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+
+                        <!-- Single Instance Lock -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Single-Instance Mutex Enforcement" FontWeight="SemiBold" FontSize="13" Foreground="#F4F4F5"/>
+                                    <TextBlock Text="Prevents multiple conflicting background instances. Launching a second instance signals and activates this window." Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#064E3B" BorderBrush="#059669" BorderThickness="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
+                                    <TextBlock Text="🟢 Mutex Acquired" FontWeight="SemiBold" FontSize="11" Foreground="#34D399"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- #################### 5. ABOUT VIEW #################### -->
+                <ScrollViewer Visibility="{Binding IsAbout, Converter={StaticResource BoolToVisConverter}}" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- App Overview Card -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="Screenshot Director" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="High-performance, lightweight screenshot router designed for speed, privacy, and seamless multi-folder organization." 
+                                           FontSize="12" Foreground="#8E8A9F" Margin="0,4,0,10" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="GitHub Repository" Click="OnGitHubClick" Style="{StaticResource PrimaryButtonStyle}" Padding="12,6" Margin="0,0,8,0"/>
+                                    <Button Content="Minimize to Tray" Click="OnMinimizeToTrayClick" Style="{StaticResource SecondaryButtonStyle}" Padding="12,6"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Shortcuts Reference Table -->
+                        <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="Keyboard Shortcuts Cheat Sheet" FontWeight="SemiBold" FontSize="14" Foreground="#DDD6FE" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#26203F" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                        <TextBlock Text="Keys 1 – 9" FontWeight="Bold" Foreground="#C084FC" FontSize="11"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Instant save to preset destination folder 1–9" Foreground="#F4F4F5" FontSize="12" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#26203F" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                        <TextBlock Text="Key S" FontWeight="Bold" Foreground="#C084FC" FontSize="11"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Select Custom Path (browse any folder with option to add to presets)" Foreground="#F4F4F5" FontSize="12" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#26203F" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                        <TextBlock Text="Key R" FontWeight="Bold" Foreground="#C084FC" FontSize="11"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Focus rename field and pause auto-dismiss timer" Foreground="#F4F4F5" FontSize="12" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#26203F" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                        <TextBlock Text="Key E" FontWeight="Bold" Foreground="#C084FC" FontSize="11"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Expand session default collapsed toast to full tile grid" Foreground="#F4F4F5" FontSize="12" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#26203F" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                        <TextBlock Text="Escape" FontWeight="Bold" Foreground="#C084FC" FontSize="11"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Dismiss routing popup without saving" Foreground="#F4F4F5" FontSize="12" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Grid>
+
+            <!-- Bottom Status & Actions Bar -->
+            <Grid Grid.Row="2" Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status message -->
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="#34D399" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                <!-- Action buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="💾 Save &amp; Apply" Click="OnSaveClick" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
+                    <Button Content="Minimize to Tray" Click="OnMinimizeToTrayClick" Style="{StaticResource SecondaryButtonStyle}"/>
                 </StackPanel>
-            </TabItem>
-        </TabControl>
-
-        <!-- Bottom Footer -->
-        <Grid Grid.Row="3" Margin="0,14,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Status message -->
-            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="#10B981" FontWeight="Medium" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-
-            <!-- Action buttons -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Content="🧪 Test Popup" Click="OnTestPopupClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                <Button Content="💾 Save &amp; Apply" Click="OnSaveClick" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
-                <Button Content="Minimize to Tray" Click="OnMinimizeToTrayClick" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-                <Button Content="🛑 Stop Program" Click="OnStopProgramClick" Style="{StaticResource DangerButtonStyle}"/>
-            </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
