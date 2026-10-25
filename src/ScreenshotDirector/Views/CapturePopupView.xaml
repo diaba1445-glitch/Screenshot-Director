@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:ScreenshotDirector.Views"
         mc:Ignorable="d"
         Title="Screenshot Director"
-        Width="440" SizeToContent="Height"
+        Width="460" SizeToContent="Height"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -18,7 +18,7 @@
 
     <Window.RenderTransform>
         <TransformGroup>
-            <ScaleTransform x:Name="WindowScale" ScaleX="1.0" ScaleY="1.0" CenterX="220" CenterY="140"/>
+            <ScaleTransform x:Name="WindowScale" ScaleX="1.0" ScaleY="1.0" CenterX="230" CenterY="140"/>
             <TranslateTransform x:Name="WindowTranslate" Y="0"/>
         </TransformGroup>
     </Window.RenderTransform>
@@ -29,31 +29,31 @@
                 <Storyboard>
                     <DoubleAnimation Storyboard.TargetProperty="Opacity" 
                                      From="0.0" To="1.0" 
-                                     Duration="0:0:0.24">
+                                     Duration="0:0:0.22">
                         <DoubleAnimation.EasingFunction>
                             <CubicEase EasingMode="EaseOut"/>
                         </DoubleAnimation.EasingFunction>
                     </DoubleAnimation>
                     <DoubleAnimation Storyboard.TargetName="WindowTranslate" 
                                      Storyboard.TargetProperty="Y" 
-                                     From="32" To="0" 
-                                     Duration="0:0:0.28">
+                                     From="28" To="0" 
+                                     Duration="0:0:0.25">
                         <DoubleAnimation.EasingFunction>
                             <CubicEase EasingMode="EaseOut"/>
                         </DoubleAnimation.EasingFunction>
                     </DoubleAnimation>
                     <DoubleAnimation Storyboard.TargetName="WindowScale" 
                                      Storyboard.TargetProperty="ScaleX" 
-                                     From="0.95" To="1.0" 
-                                     Duration="0:0:0.24">
+                                     From="0.96" To="1.0" 
+                                     Duration="0:0:0.22">
                         <DoubleAnimation.EasingFunction>
                             <CubicEase EasingMode="EaseOut"/>
                         </DoubleAnimation.EasingFunction>
                     </DoubleAnimation>
                     <DoubleAnimation Storyboard.TargetName="WindowScale" 
                                      Storyboard.TargetProperty="ScaleY" 
-                                     From="0.95" To="1.0" 
-                                     Duration="0:0:0.24">
+                                     From="0.96" To="1.0" 
+                                     Duration="0:0:0.22">
                         <DoubleAnimation.EasingFunction>
                             <CubicEase EasingMode="EaseOut"/>
                         </DoubleAnimation.EasingFunction>
@@ -68,12 +68,12 @@
         <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
         <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisConverter"/>
 
-        <!-- Modern Tile Card Button Style -->
+        <!-- Premium Destination Tile Card Style -->
         <Style x:Key="DestTileCardStyle" TargetType="Button">
-            <Setter Property="Background" Value="#1E1E24"/>
+            <Setter Property="Background" Value="#171424"/>
             <Setter Property="Foreground" Value="#F4F4F5"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#2D2D35"/>
+            <Setter Property="BorderBrush" Value="#2A2440"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Margin" Value="4"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -91,12 +91,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#272732"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#0284C7"/>
+                                <Setter TargetName="border" Property="Background" Value="#241E38"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#7C3AED"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#181820"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#007ACC"/>
+                                <Setter TargetName="border" Property="Background" Value="#1C172E"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#6D28D9"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.4"/>
@@ -106,16 +106,78 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Subtle Pill Action Button Style -->
+        <Style x:Key="HeaderPillButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1F1B33"/>
+            <Setter Property="Foreground" Value="#DDD6FE"/>
+            <Setter Property="BorderBrush" Value="#382E59"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2B2547"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#7C3AED"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#19152B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Close / Dismiss Button Style -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8E8A9F"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2A223E"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <!-- Outer Glass Frame with Glow & Shadow -->
-    <Border Background="#16161A" 
-            BorderBrush="#0284C7" 
+    <!-- Outer Glass Shell with Deep Violet Ambient Glow & Shadow -->
+    <Border Background="#12101C" 
+            BorderBrush="#3D345C" 
             BorderThickness="1.5" 
             CornerRadius="14" 
             Margin="12">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="26" Direction="270" ShadowDepth="4" Opacity="0.8" Color="#000000"/>
+            <DropShadowEffect BlurRadius="32" Direction="270" ShadowDepth="6" Opacity="0.85" Color="#000000"/>
         </Border.Effect>
 
         <Grid Margin="14">
@@ -138,9 +200,9 @@
                     <Border Grid.Column="0" 
                             Width="64" Height="48" 
                             CornerRadius="6" 
-                            BorderBrush="#0284C7" 
+                            BorderBrush="#382E57" 
                             BorderThickness="1" 
-                            Background="#09090B" 
+                            Background="#090810" 
                             ClipToBounds="True">
                         <Image Source="{Binding PreviewImage}" 
                                Stretch="UniformToFill" 
@@ -149,23 +211,23 @@
                     </Border>
 
                     <!-- Content & Actions -->
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                            <TextBlock Text="⚡ Auto-Routing to" FontSize="11" Foreground="#38BDF8" FontWeight="SemiBold"/>
+                            <TextBlock Text="⚡ Auto-Routing to" FontSize="11" Foreground="#C084FC" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding SessionDefaultFolderName, StringFormat=': {0}'}" 
                                        FontSize="11" Foreground="#FFFFFF" FontWeight="Bold"/>
                         </StackPanel>
                         <TextBlock Text="{Binding SessionDefaultPath}" 
-                                   FontSize="10" Foreground="#A1A1AA" 
+                                   FontSize="10" Foreground="#8E8A9F" 
                                    TextTrimming="CharacterEllipsis" Margin="0,0,0,6"/>
 
                         <!-- Action Buttons -->
                         <StackPanel Orientation="Horizontal">
                             <Button Content="✓ Save Now" 
                                     Click="OnSaveSessionDefaultNowClick"
-                                    Background="#0284C7" Foreground="#FFFFFF" 
+                                    Background="#7C3AED" Foreground="#FFFFFF" 
                                     FontWeight="SemiBold" FontSize="11" 
-                                    Padding="10,3" BorderThickness="0" 
+                                    Padding="10,4" BorderThickness="0" 
                                     Cursor="Hand" Margin="0,0,6,0">
                                 <Button.Resources>
                                     <Style TargetType="Border">
@@ -176,9 +238,9 @@
 
                             <Button Content="🔽 Change / Expand" 
                                     Click="OnExpandToFullClick"
-                                    Background="#27272A" Foreground="#E4E4E7" 
-                                    FontSize="11" Padding="8,3" 
-                                    BorderBrush="#3F3F46" BorderThickness="1" 
+                                    Background="#221C35" Foreground="#DDD6FE" 
+                                    FontSize="11" Padding="8,4" 
+                                    BorderBrush="#3B335A" BorderThickness="1" 
                                     Cursor="Hand" Margin="0,0,6,0">
                                 <Button.Resources>
                                     <Style TargetType="Border">
@@ -190,7 +252,7 @@
                             <Button Content="✕ Clear Default" 
                                     Click="OnClearSessionDefaultClick"
                                     Background="Transparent" Foreground="#F87171" 
-                                    FontSize="10" Padding="4,3" 
+                                    FontSize="10" Padding="4,4" 
                                     BorderThickness="0" Cursor="Hand"/>
                         </StackPanel>
                     </StackPanel>
@@ -202,8 +264,8 @@
                              Minimum="0.0" 
                              Maximum="1.0" 
                              Value="{Binding TimeoutProgress, Mode=OneWay}" 
-                             Foreground="#0284C7" 
-                             Background="#222227" 
+                             Foreground="#8B5CF6" 
+                             Background="#1F1A30" 
                              BorderThickness="0" 
                              Margin="0,10,0,0"/>
             </Grid>
@@ -229,14 +291,25 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="📸" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <!-- Gradient Camera Logo Badge -->
+                        <Border Width="24" Height="24" CornerRadius="12" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#8B5CF6" Offset="0.0"/>
+                                    <GradientStop Color="#6366F1" Offset="1.0"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <TextBlock Text="📸" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
                         <TextBlock Text="Screenshot Director" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
-                                   Foreground="#38BDF8"
+                                   Foreground="#FFFFFF"
                                    VerticalAlignment="Center"/>
-                        <Border Background="#0C4A6E" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="Quick Route" FontSize="10" FontWeight="SemiBold" Foreground="#7DD3FC"/>
+
+                        <Border Background="#251E3C" BorderBrush="#3D3063" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="Quick Route" FontSize="10" FontWeight="SemiBold" Foreground="#C084FC"/>
                         </Border>
                     </StackPanel>
 
@@ -244,38 +317,20 @@
                         <!-- Select Path Button -->
                         <Button Content="📁 Select Path..." 
                                 Click="OnSelectPathClick"
-                                Background="#1E293B" 
-                                Foreground="#38BDF8" 
-                                BorderBrush="#0284C7" 
-                                BorderThickness="1" 
-                                FontSize="11" 
-                                FontWeight="SemiBold"
-                                Padding="8,3" 
-                                Margin="0,0,8,0"
-                                Cursor="Hand"
-                                ToolTip="Direct screenshot to another unlisted folder">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="5"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
+                                Style="{StaticResource HeaderPillButtonStyle}"
+                                Margin="0,0,6,0"
+                                ToolTip="Direct screenshot to another unlisted folder"/>
 
+                        <!-- Close Button -->
                         <Button Content="✕" 
                                 Click="OnDismissClick"
-                                Foreground="#A1A1AA" 
-                                Background="Transparent" 
-                                BorderThickness="0" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Cursor="Hand"
-                                ToolTip="Dismiss (Esc)"
-                                Padding="6,2"/>
+                                Style="{StaticResource CloseButtonStyle}"
+                                ToolTip="Dismiss (Esc)"/>
                     </StackPanel>
                 </Grid>
 
                 <!-- Preview & Filename Card -->
-                <Border Grid.Row="1" Background="#1D1D22" BorderBrush="#2D2D35" BorderThickness="1" CornerRadius="8" Padding="8" Margin="0,0,0,10">
+                <Border Grid.Row="1" Background="#181524" BorderBrush="#2A2440" BorderThickness="1" CornerRadius="10" Padding="10,8" Margin="0,0,0,10">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="74"/>
@@ -284,11 +339,11 @@
 
                         <!-- Thumbnail -->
                         <Border Grid.Column="0" 
-                                Width="74" Height="54" 
+                                Width="74" Height="52" 
                                 CornerRadius="6" 
-                                BorderBrush="#3E3E48" 
+                                BorderBrush="#382F57" 
                                 BorderThickness="1" 
-                                Background="#09090B" 
+                                Background="#0A0910" 
                                 ClipToBounds="True">
                             <Image Source="{Binding PreviewImage}" 
                                    Stretch="UniformToFill" 
@@ -297,28 +352,30 @@
                         </Border>
 
                         <!-- Filename Input with Placeholder & Resolution -->
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
                             <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                                    <TextBlock Text="Filename:" Foreground="#A1A1AA" FontSize="11" FontWeight="Medium"/>
+                                    <TextBlock Text="Filename:" Foreground="#8E8A9F" FontSize="11" FontWeight="Medium"/>
                                     <!-- Paused indicator when renaming -->
-                                    <Border Background="#78350F" CornerRadius="3" Padding="5,1" Margin="6,0,0,0"
+                                    <Border Background="#3B2612" BorderBrush="#6B431D" BorderThickness="1" CornerRadius="3" Padding="5,1" Margin="6,0,0,0"
                                             Visibility="{Binding IsTimerPaused, Converter={StaticResource BoolToVisConverter}}">
-                                        <TextBlock Text="⏸ Paused" FontSize="9" FontWeight="Bold" Foreground="#FDE68A"/>
+                                        <TextBlock Text="⏸ Paused" FontSize="9" FontWeight="Bold" Foreground="#FBBF24"/>
                                     </Border>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding ResolutionText}" Foreground="#0284C7" FontSize="10" FontWeight="SemiBold"/>
+                                <Border Grid.Column="1" Background="#241D3B" BorderBrush="#3A2D5C" BorderThickness="1" CornerRadius="4" Padding="5,1">
+                                    <TextBlock Text="{Binding ResolutionText}" Foreground="#C084FC" FontSize="10" FontWeight="SemiBold"/>
+                                </Border>
                             </Grid>
 
                             <!-- Rename field with watermark -->
                             <Grid>
                                 <!-- Watermark shown when text is empty -->
                                 <TextBlock Text="{Binding DefaultFilename, StringFormat='(Default: {0})'}" 
-                                           Foreground="#52525B" 
+                                           Foreground="#5A5570" 
                                            FontSize="11" 
                                            VerticalAlignment="Center" 
                                            Margin="7,0,0,0" 
@@ -327,16 +384,22 @@
 
                                 <TextBox x:Name="FilenameTextBox"
                                          Text="{Binding Filename, UpdateSourceTrigger=PropertyChanged}" 
-                                         Background="Transparent" 
+                                         Background="#100E19" 
                                          Foreground="#FFFFFF" 
-                                         BorderBrush="#3E3E48" 
+                                         BorderBrush="#342B50" 
                                          BorderThickness="1" 
                                          Padding="6,4" 
                                          FontSize="12"
-                                         CaretBrush="#38BDF8"
+                                         CaretBrush="#A855F7"
                                          GotFocus="OnFilenameGotFocus"
                                          KeyDown="OnFilenameKeyDown"
-                                         TextChanged="OnFilenameTextChanged"/>
+                                         TextChanged="OnFilenameTextChanged">
+                                    <TextBox.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </TextBox.Resources>
+                                </TextBox>
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -344,44 +407,44 @@
 
                 <!-- Error Banner -->
                 <Border Grid.Row="2" 
-                        Background="#5C1A1A" 
-                        BorderBrush="#FF5252" 
+                        Background="#3B181E" 
+                        BorderBrush="#7F1D1D" 
                         BorderThickness="1" 
                         CornerRadius="6" 
                         Padding="10,6" 
                         Margin="0,0,0,10"
                         Visibility="{Binding HasError, Converter={StaticResource BoolToVisConverter}}">
                     <TextBlock Text="{Binding ErrorMessage}" 
-                               Foreground="#FFD2D2" 
+                               Foreground="#FCA5A5" 
                                FontSize="11" 
                                TextWrapping="Wrap"/>
                 </Border>
 
                 <!-- Custom Path Confirmation Drawer (when selected via Select Path) -->
                 <Border Grid.Row="3" 
-                        Background="#1E293B" 
-                        BorderBrush="#0284C7" 
+                        Background="#1A162B" 
+                        BorderBrush="#3D345C" 
                         BorderThickness="1.5" 
                         CornerRadius="8" 
-                        Padding="10" 
+                        Padding="12,10" 
                         Margin="0,0,0,10"
                         Visibility="{Binding IsCustomPathSelected, Converter={StaticResource BoolToVisConverter}}">
                     <StackPanel>
-                        <TextBlock Text="📁 Selected Custom Folder:" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8"/>
-                        <TextBlock Text="{Binding SelectedCustomPath}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" Margin="0,2,0,6" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="📁 Selected Custom Folder:" FontSize="11" FontWeight="SemiBold" Foreground="#C084FC"/>
+                        <TextBlock Text="{Binding SelectedCustomPath}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" Margin="0,2,0,8" TextTrimming="CharacterEllipsis"/>
 
-                        <CheckBox IsChecked="{Binding AddCustomPathToPresets}" Margin="0,0,0,4">
-                            <TextBlock Text="Add this folder to presets (assign shortcut key)" Foreground="#E4E4E7" FontSize="11"/>
+                        <CheckBox IsChecked="{Binding AddCustomPathToPresets}" Margin="0,0,0,6">
+                            <TextBlock Text="Add this folder to presets (assign shortcut key)" Foreground="#DDD6FE" FontSize="11"/>
                         </CheckBox>
 
-                        <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="0,0,0,8">
-                            <TextBlock Text="Set as session default folder" Foreground="#E4E4E7" FontSize="11"/>
+                        <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="0,0,0,10">
+                            <TextBlock Text="Set as session default folder" Foreground="#DDD6FE" FontSize="11"/>
                         </CheckBox>
 
                         <StackPanel Orientation="Horizontal">
                             <Button Content="✓ Save to Folder" 
                                     Click="OnConfirmSaveCustomPathClick"
-                                    Background="#0284C7" Foreground="#FFFFFF" 
+                                    Background="#7C3AED" Foreground="#FFFFFF" 
                                     FontWeight="Bold" FontSize="11" Padding="12,5" 
                                     BorderThickness="0" Cursor="Hand" Margin="0,0,8,0">
                                 <Button.Resources>
@@ -393,9 +456,9 @@
 
                             <Button Content="✕ Cancel" 
                                     Click="OnCancelCustomPathClick"
-                                    Background="#27272A" Foreground="#A1A1AA" 
+                                    Background="#241E38" Foreground="#8E8A9F" 
                                     FontSize="11" Padding="10,5" 
-                                    BorderBrush="#3F3F46" BorderThickness="1" 
+                                    BorderBrush="#3A3059" BorderThickness="1" 
                                     Cursor="Hand">
                                 <Button.Resources>
                                     <Style TargetType="Border">
@@ -429,13 +492,16 @@
 
                                     <!-- Keycap Number Badge -->
                                     <Border Grid.Column="0" 
-                                            Background="#0284C7" 
-                                            BorderBrush="#38BDF8"
-                                            BorderThickness="1"
                                             CornerRadius="5" 
                                             Width="24" Height="24" 
                                             HorizontalAlignment="Center" 
                                             VerticalAlignment="Center">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                <GradientStop Color="#7C3AED" Offset="0.0"/>
+                                                <GradientStop Color="#6366F1" Offset="1.0"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
                                         <TextBlock Text="{Binding ShortcutNumber}" 
                                                    Foreground="#FFFFFF" 
                                                    FontSize="12" 
@@ -455,7 +521,7 @@
                                                        TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                         <TextBlock Text="{Binding Path}" 
-                                                   Foreground="#A1A1AA" 
+                                                   Foreground="#8E8A9F" 
                                                    FontSize="10" 
                                                    TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
@@ -469,16 +535,16 @@
                 <StackPanel Grid.Row="5" Margin="0,10,0,0">
                     <!-- Session Default Checkbox -->
                     <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="2,0,0,8" ToolTip="Future screenshots in this session will auto-route to the selected folder">
-                        <TextBlock Text="📌 Remember choice as session default folder" Foreground="#94A3B8" FontSize="11"/>
+                        <TextBlock Text="📌 Remember choice as session default folder" Foreground="#9CA3AF" FontSize="11"/>
                     </CheckBox>
 
                     <!-- Timeout Bar -->
-                    <ProgressBar Height="3.5" 
+                    <ProgressBar Height="3" 
                                  Minimum="0.0" 
                                  Maximum="1.0" 
                                  Value="{Binding TimeoutProgress, Mode=OneWay}" 
-                                 Foreground="#0284C7" 
-                                 Background="#222227" 
+                                 Foreground="#8B5CF6" 
+                                 Background="#1F1A30" 
                                  BorderThickness="0"/>
 
                     <Grid Margin="0,6,0,0">
@@ -486,8 +552,8 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Press 1–9 or click tile to save" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="Esc to dismiss" Foreground="#71717A" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="0" Text="Press 1–9 or click tile to save" Foreground="#8E8A9F" FontSize="11" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Esc to dismiss" Foreground="#5A5570" FontSize="11" VerticalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
             </Grid>
