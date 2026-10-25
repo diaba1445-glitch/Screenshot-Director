@@ -50,12 +50,15 @@ public class StartupAndSingleInstanceTests : IDisposable
     [Fact]
     public void SingleInstanceManager_FirstInstanceAcquires_SecondInstanceSignals()
     {
-        using var instance1 = new SingleInstanceManager(_logger);
+        string testMutex = $@"Local\SD_Test_Mutex_{Guid.NewGuid():N}";
+        string testEvent = $@"Local\SD_Test_Event_{Guid.NewGuid():N}";
+
+        using var instance1 = new SingleInstanceManager(_logger, testMutex, testEvent);
         bool firstAcquired = instance1.TryAcquireSingleInstance(out bool isPrimary1);
         Assert.True(firstAcquired);
         Assert.True(isPrimary1);
 
-        using var instance2 = new SingleInstanceManager(_logger);
+        using var instance2 = new SingleInstanceManager(_logger, testMutex, testEvent);
         bool secondAcquired = instance2.TryAcquireSingleInstance(out bool isPrimary2);
         Assert.False(secondAcquired);
         Assert.False(isPrimary2);

@@ -66,7 +66,8 @@ public class PopupViewModelTests : IDisposable
             Assert.NotNull(vm.PreviewImage);
             Assert.NotEmpty(vm.Destinations);
             Assert.Equal(1, vm.Destinations[0].ShortcutNumber);
-            Assert.StartsWith("Screenshot_", vm.Filename);
+            Assert.Equal(string.Empty, vm.Filename); // Empty by default per requirements
+            Assert.StartsWith("Screenshot_", vm.DefaultFilename);
         });
     }
 
@@ -135,17 +136,17 @@ public class PopupViewModelTests : IDisposable
     }
 
     [Fact]
-    public void FilenameChange_ResetsTimeoutProgress()
+    public void FilenameChange_PausesTimer()
     {
         StaTestHelper.RunInSta(() =>
         {
             var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
             vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
 
-            vm.TimeoutProgress = 0.25;
-            vm.Filename = "NewName.png";
+            Assert.False(vm.IsTimerPaused);
+            vm.Filename = "NewCustomName";
 
-            Assert.Equal(1.0, vm.TimeoutProgress);
+            Assert.True(vm.IsTimerPaused);
         });
     }
 
@@ -170,4 +171,135 @@ public class PopupViewModelTests : IDisposable
             Assert.NotEmpty(vm.ErrorMessage);
         });
     }
+
+    [Fact]
+    public void IsNotSaving_InvertsIsSaving_AndNotifiesChanges()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            Assert.False(vm.IsSaving);
+            Assert.True(vm.IsNotSaving);
+
+            bool isNotSavingChanged = false;
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(vm.IsNotSaving))
+                {
+                    isNotSavingChanged = true;
+                }
+            };
+
+            vm.IsSaving = true;
+            Assert.False(vm.IsNotSaving);
+            Assert.True(isNotSavingChanged);
+        });
+    }
+
+    [Fact]
+    public async Task HasNoDestinations_ReflectsEmptyState()
+    {
+        await StaTestHelper.RunInStaAsync(async () =>
+        {
+            var settings = await _settingsService.LoadSettingsAsync();
+            settings.Destinations.Clear();
+            await _settingsService.SaveSettingsAsync(settings);
+
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            Assert.True(vm.HasNoDestinations);
+            Assert.Empty(vm.Destinations);
+        });
+    }
+
+    [Fact]
+    public void PopupViewModel_ResolutionText_And_Position_ComputedCorrectly()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            var bmp = CreateTestBitmap(); // 32x32
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = bmp });
+
+            Assert.Equal("32 × 32", vm.ResolutionText);
+            Assert.Equal(PopupPosition.BottomRight, vm.Position);
+        });
+    }
+
+    [Fact]
+    public void DestinationItemViewModel_DisplayIcon_SelectsAppropriateEmoji()
+    {
+        var dest1 = new DestinationFolder { Name = "Screenshots", Path = @"C:\Pictures\Screenshots" };
+        var item1 = new DestinationItemViewModel(dest1);
+        Assert.Equal("📸", item1.DisplayIcon);
+
+        var dest2 = new DestinationFolder { Name = "Desktop", Path = @"C:\Users\User\Desktop" };
+        var item2 = new DestinationItemViewModel(dest2);
+        Assert.Equal("🖥️", item2.DisplayIcon);
+
+        var dest3 = new DestinationFolder { Name = "Downloads", Path = @"C:\Users\User\Downloads" };
+        var item3 = new DestinationItemViewModel(dest3);
+        Assert.Equal("📥", item3.DisplayIcon);
+
+        var dest4 = new DestinationFolder { Name = "Documents", Path = @"C:\Users\User\Documents" };
+        var item4 = new DestinationItemViewModel(dest4);
+        Assert.Equal("📑", item4.DisplayIcon);
+    }
+
+    [Fact]
+    public void SessionDefaultPath_WhenSet_StartsCollapsed_AndAllowsExpand()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var testFolder = Path.Combine(_tempDir, "SessionDir");
+            Directory.CreateDirectory(testFolder);
+            _settingsService.SessionDefaultPath = testFolder;
+
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            Assert.True(vm.HasSessionDefault);
+            Assert.True(vm.IsCollapsed);
+            Assert.Equal("SessionDir", vm.SessionDefaultFolderName);
+
+            // Expanding uncollapses and pauses timer
+            vm.ExpandToFullList();
+            Assert.False(vm.IsCollapsed);
+            Assert.True(vm.IsTimerPaused);
+
+            // Clearing default removes it
+            vm.ClearSessionDefault();
+            Assert.False(vm.HasSessionDefault);
+            Assert.Null(_settingsService.SessionDefaultPath);
+        });
+    }
+
+    [Fact]
+    public async Task SaveToCustomPathAsync_SavesScreenshot_AndAddsToPresets()
+    {
+        await StaTestHelper.RunInStaAsync(async () =>
+        {
+            var customTarget = Path.Combine(_tempDir, "CustomProjectFolder");
+            Directory.CreateDirectory(customTarget);
+
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            bool closed = false;
+            vm.RequestClose += (s, e) => closed = true;
+
+            bool success = await vm.SaveToCustomPathAsync(customTarget, addToPresets: true, setAsSessionDefault: true);
+
+            Assert.True(success);
+            Assert.True(closed);
+            Assert.Single(Directory.GetFiles(customTarget, "*.png"));
+            Assert.Equal(customTarget, _settingsService.SessionDefaultPath);
+
+            var updatedSettings = _settingsService.CurrentSettings;
+            Assert.Contains(updatedSettings.Destinations, d => d.Path.Equals(customTarget, StringComparison.OrdinalIgnoreCase));
+        });
+    }
 }
+
+

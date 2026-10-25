@@ -23,7 +23,7 @@ public partial class App : System.Windows.Application
     private TrayIconManager? _trayIconManager;
 
     private CapturePopupView? _activePopup;
-    private SettingsWindow? _settingsWindow;
+    private MainWindow? _mainWindow;
     private readonly object _popupLock = new();
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -48,7 +48,7 @@ public partial class App : System.Windows.Application
 
         _singleInstanceManager.SecondInstanceLaunched += (s, args) =>
         {
-            Dispatcher.Invoke(OpenSettingsWindow);
+            Dispatcher.Invoke(OpenMainWindow);
         };
 
         try
@@ -73,7 +73,7 @@ public partial class App : System.Windows.Application
             // 7. Initialize Tray Icon
             _trayIconManager = new TrayIconManager(
                 _detectionService,
-                OpenSettingsWindow,
+                OpenMainWindow,
                 ShutdownApp,
                 _logger);
             _notificationService.RegisterNotifyIcon(_trayIconManager.NotifyIcon);
@@ -91,13 +91,11 @@ public partial class App : System.Windows.Application
 
             _logger.Info("Screenshot Director initialized successfully.");
 
-            // If started normally (not via --minimized), show a subtle balloon notification
+            // If started manually (not via --minimized), open the Main Control Dashboard
             bool isMinimized = e.Args.Contains("--minimized", StringComparer.OrdinalIgnoreCase);
             if (!isMinimized)
             {
-                _notificationService.ShowSuccess(
-                    "Screenshot Director Active",
-                    "Take a screenshot (Win+Shift+S or PrtScn) to route it to your preset folders.");
+                OpenMainWindow();
             }
         }
         catch (Exception ex)
@@ -163,33 +161,50 @@ public partial class App : System.Windows.Application
         });
     }
 
-    private void OpenSettingsWindow()
+    private void OpenMainWindow()
     {
         Dispatcher.Invoke(() =>
         {
             try
             {
-                if (_settingsWindow != null && _settingsWindow.IsLoaded)
+                if (_mainWindow != null && _mainWindow.IsLoaded)
                 {
-                    _settingsWindow.WindowState = WindowState.Normal;
-                    _settingsWindow.Activate();
+                    if (_mainWindow.Visibility != Visibility.Visible)
+                    {
+                        _mainWindow.Show();
+                    }
+                    _mainWindow.WindowState = WindowState.Normal;
+                    _mainWindow.Activate();
+                    _mainWindow.Topmost = true;
+                    _mainWindow.Topmost = false;
+                    _mainWindow.Focus();
                     return;
                 }
 
                 if (_settingsService == null || _startupManager == null || _logger == null) return;
 
-                var vm = new SettingsViewModel(_settingsService, _startupManager, _logger);
-                _settingsWindow = new SettingsWindow
+                var vm = new MainControlViewModel(
+                    _settingsService,
+                    _startupManager,
+                    _detectionService,
+                    ShutdownApp,
+                    _logger);
+
+                _mainWindow = new MainWindow
                 {
                     DataContext = vm
                 };
-                _settingsWindow.Closed += (s, e) => _settingsWindow = null;
-                _settingsWindow.Show();
-                _settingsWindow.Activate();
+                _mainWindow.Closed += (s, e) => _mainWindow = null;
+                _mainWindow.Show();
+                _mainWindow.WindowState = WindowState.Normal;
+                _mainWindow.Activate();
+                _mainWindow.Topmost = true;
+                _mainWindow.Topmost = false;
+                _mainWindow.Focus();
             }
             catch (Exception ex)
             {
-                _logger?.Error("Failed to open SettingsWindow", ex);
+                _logger?.Error("Failed to open MainWindow", ex);
             }
         });
     }

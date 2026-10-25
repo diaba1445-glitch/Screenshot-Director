@@ -34,6 +34,32 @@ public class SettingsService : ISettingsService
 
     public event EventHandler<AppSettings>? SettingsChanged;
 
+    private string? _sessionDefaultPath;
+    public string? SessionDefaultPath
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _sessionDefaultPath;
+            }
+        }
+        set
+        {
+            lock (_lock)
+            {
+                if (_sessionDefaultPath != value)
+                {
+                    _sessionDefaultPath = value;
+                    _logger.Info($"Session default folder changed to: {value ?? "<None>"}");
+                }
+            }
+            SessionDefaultPathChanged?.Invoke(this, value);
+        }
+    }
+
+    public event EventHandler<string?>? SessionDefaultPathChanged;
+
     public SettingsService(IAppLogger logger, string? customSettingsPath = null)
     {
         _logger = logger;

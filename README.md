@@ -21,12 +21,14 @@ With a single keypress (`1`–`9`) or click, your screenshot is encoded as a los
   - Collision avoidance with automatic numbered suffixes: `Screenshot_2026-10-25_15-30-00.png`, `Screenshot_2026-10-25_15-30-00 (1).png`, etc.
   - Path traversal and invalid character sanitation.
 - **Self-Clipboard Suppression**: Internal clipboard writes (such as copying the saved file path) are suppressed to prevent infinite popup trigger loops.
-- **System Tray & Settings**:
-  - Runs quietly in the Windows system tray.
-  - Right-click tray menu: *Open Settings*, *Pause/Resume Detection*, *Manage Destinations*, *Exit*.
-  - Settings UI to add, browse, edit, reorder, and toggle destination folders.
+- **System Tray & Control Center**:
+  - Launches into a full Control Center dashboard on manual launch to manage presets, permissions, and app status.
+  - Minimizes to the Windows system tray when closed.
+  - Right-click tray menu: *Open Control Center*, *Pause/Resume Detection*, *Manage Presets*, *Stop Program & Exit*.
+  - User-driven preset configuration with template shortcuts (`Pictures\Screenshots`, `Desktop`, `Downloads`, or any custom folder) mapped to keys `1`–`9`.
+  - Live pause/resume detection and program stop controls.
   - Per-user Windows startup toggle (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`) requiring no administrative privileges.
-- **Single-Instance Enforcement**: Named Mutex lock ensures only one active background instance runs; launching a second instance signals the primary instance to activate the Settings interface.
+- **Single-Instance Enforcement**: Named Mutex lock ensures only one active background instance runs; launching a second instance signals the primary instance to activate the Control Center.
 
 ---
 
@@ -53,10 +55,10 @@ ScreenshotDirector/
 │       ├── Infrastructure/        # AppLogger (bounded, rotated, PII-free)
 │       ├── Platform/              # NativeMethods, SingleInstanceManager, StartupManager, TrayIcon
 │       ├── Services/              # CaptureDetectionService, ImageCaptureService, ImageSaveService, SettingsService
-│       ├── ViewModels/            # CapturePopupViewModel, SettingsViewModel
-│       └── Views/                 # CapturePopupView.xaml, SettingsWindow.xaml
+│       ├── ViewModels/            # CapturePopupViewModel, MainControlViewModel, SettingsViewModel
+│       └── Views/                 # MainWindow.xaml, CapturePopupView.xaml, SettingsWindow.xaml
 └── tests/
-    ├── ScreenshotDirector.UnitTests/         # 31 unit tests (Save, Settings, Detection, ViewModels)
+    ├── ScreenshotDirector.UnitTests/         # 40 unit tests (Save, Settings, Detection, ControlCenter, Popups)
     └── ScreenshotDirector.IntegrationTests/  # 3 integration tests (End-to-end, 4K stress, Leaks)
 ```
 
@@ -83,7 +85,7 @@ dotnet test .\ScreenshotDirector.sln
 ```
 
 ### Test Coverage Summary:
-- **Unit Tests (31 passed)**:
+- **Unit Tests (40 passed)**:
   - Filename generation and invariant timestamp formatting
   - Path traversal rejection (`..`, `/`, `\`, illegal characters)
   - Filename collision resolution (`(1)`, `(2)`)

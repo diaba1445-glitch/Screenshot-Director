@@ -14,10 +14,21 @@ public enum ClipboardDetectionMode
     GenericFallback
 }
 
+public enum PopupPosition
+{
+    BottomRight,
+    TopRight,
+    BottomCenter,
+    CursorAdjacent
+}
+
 public class AppSettings
 {
     [JsonPropertyName("schemaVersion")]
     public int SchemaVersion { get; set; } = 1;
+
+    [JsonPropertyName("isFirstRunCompleted")]
+    public bool IsFirstRunCompleted { get; set; } = false;
 
     [JsonPropertyName("startWithWindows")]
     public bool StartWithWindows { get; set; } = true;
@@ -50,6 +61,10 @@ public class AppSettings
 
     [JsonPropertyName("genericImageFallbackEnabled")]
     public bool GenericImageFallbackEnabled { get; set; } = false;
+
+    [JsonPropertyName("popupPosition")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PopupPosition PopupPosition { get; set; } = PopupPosition.BottomRight;
 
     [JsonPropertyName("destinations")]
     public List<DestinationFolder> Destinations { get; set; } = new();

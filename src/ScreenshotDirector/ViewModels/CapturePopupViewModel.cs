@@ -17,6 +17,23 @@ public class DestinationItemViewModel : INotifyPropertyChanged
     public string Path => Folder.Path;
     public bool Exists => Folder.Exists;
 
+    public string DisplayIcon
+    {
+        get
+        {
+            var text = (DisplayName + " " + Path).ToLowerInvariant();
+            if (text.Contains("screenshot") || text.Contains("snip") || text.Contains("capture")) return "📸";
+            if (text.Contains("desktop")) return "🖥️";
+            if (text.Contains("download")) return "📥";
+            if (text.Contains("doc") || text.Contains("work") || text.Contains("report")) return "📑";
+            if (text.Contains("picture") || text.Contains("photo") || text.Contains("image")) return "🖼️";
+            if (text.Contains("code") || text.Contains("dev") || text.Contains("project") || text.Contains("git")) return "💻";
+            if (text.Contains("music") || text.Contains("audio")) return "🎵";
+            if (text.Contains("video") || text.Contains("movie")) return "🎬";
+            return "📁";
+        }
+    }
+
     public DestinationItemViewModel(DestinationFolder folder)
     {
         Folder = folder;
@@ -41,8 +58,70 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
     private BitmapSource? _previewImage;
     private string _filename = string.Empty;
+    private string _defaultFilename = string.Empty;
     private string _statusMessage = string.Empty;
     private string _errorMessage = string.Empty;
+    private bool _isTimerPaused;
+    private bool _isCollapsed;
+    private bool _setAsSessionDefaultOnSave;
+
+    public string ResolutionText => PreviewImage != null
+        ? $"{PreviewImage.PixelWidth} × {PreviewImage.PixelHeight}"
+        : string.Empty;
+
+    public PopupPosition Position => _settingsService?.CurrentSettings?.PopupPosition ?? PopupPosition.BottomRight;
+
+    public string DefaultFilename
+    {
+        get => _defaultFilename;
+        private set { _defaultFilename = value; OnPropertyChanged(); }
+    }
+
+    public bool IsTimerPaused
+    {
+        get => _isTimerPaused;
+        private set { _isTimerPaused = value; OnPropertyChanged(); }
+    }
+
+    public bool IsCollapsed
+    {
+        get => _isCollapsed;
+        set { _isCollapsed = value; OnPropertyChanged(); }
+    }
+
+    public bool HasSessionDefault => !string.IsNullOrWhiteSpace(_settingsService?.SessionDefaultPath) && Directory.Exists(_settingsService?.SessionDefaultPath);
+    public string? SessionDefaultPath => _settingsService?.SessionDefaultPath;
+    public string SessionDefaultFolderName => !string.IsNullOrWhiteSpace(SessionDefaultPath)
+        ? Path.GetFileName(SessionDefaultPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+        : string.Empty;
+
+    public bool SetAsSessionDefaultOnSave
+    {
+        get => _setAsSessionDefaultOnSave;
+        set { _setAsSessionDefaultOnSave = value; OnPropertyChanged(); }
+    }
+
+    private bool _isCustomPathSelected;
+    public bool IsCustomPathSelected
+    {
+        get => _isCustomPathSelected;
+        set { _isCustomPathSelected = value; OnPropertyChanged(); }
+    }
+
+    private string? _selectedCustomPath;
+    public string? SelectedCustomPath
+    {
+        get => _selectedCustomPath;
+        set { _selectedCustomPath = value; OnPropertyChanged(); }
+    }
+
+    private bool _addCustomPathToPresets = true;
+    public bool AddCustomPathToPresets
+    {
+        get => _addCustomPathToPresets;
+        set { _addCustomPathToPresets = value; OnPropertyChanged(); }
+    }
+
     private bool _hasError;
     private bool _isSaving;
     private double _timeoutProgress = 1.0;
@@ -65,7 +144,8 @@ public class CapturePopupViewModel : INotifyPropertyChanged
             {
                 _filename = value;
                 OnPropertyChanged();
-                ResetTimeout();
+                // As soon as user starts renaming, pause the countdown timer!
+                PauseTimer();
             }
         }
     }
@@ -91,8 +171,18 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public bool IsSaving
     {
         get => _isSaving;
-        set { _isSaving = value; OnPropertyChanged(); }
+        set
+        {
+            if (_isSaving != value)
+            {
+                _isSaving = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotSaving));
+            }
+        }
     }
+
+    public bool IsNotSaving => !_isSaving;
 
     public double TimeoutProgress
     {
@@ -119,19 +209,65 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         PreviewImage = candidate.ImageSource;
         var settings = _settingsService.CurrentSettings;
 
-        _timeoutSeconds = settings.PopupTimeoutSeconds > 0 ? settings.PopupTimeoutSeconds : 7;
+        DefaultFilename = _saveService.GenerateDefaultFilename(settings.DefaultFilenamePattern);
+        Filename = string.Empty; // Start empty as requested!
+        IsTimerPaused = false;
+        SetAsSessionDefaultOnSave = false;
+
+        OnPropertyChanged(nameof(HasSessionDefault));
+        OnPropertyChanged(nameof(SessionDefaultPath));
+        OnPropertyChanged(nameof(SessionDefaultFolderName));
+
+        if (HasSessionDefault)
+        {
+            IsCollapsed = true;
+            _timeoutSeconds = 3; // quick 3-second toast when session default is active
+        }
+        else
+        {
+            IsCollapsed = false;
+            _timeoutSeconds = settings.PopupTimeoutSeconds > 0 ? settings.PopupTimeoutSeconds : 7;
+        }
+
         _remainingTimeMs = _timeoutSeconds * 1000;
         TimeoutProgress = 1.0;
-
-        Filename = _saveService.GenerateDefaultFilename(settings.DefaultFilenamePattern);
 
         Destinations.Clear();
         foreach (var dest in settings.Destinations.Where(d => d.IsEnabled).OrderBy(d => d.ShortcutNumber))
         {
             Destinations.Add(new DestinationItemViewModel(dest));
         }
+        OnPropertyChanged(nameof(HasNoDestinations));
 
         StartTimer();
+    }
+
+    public bool HasNoDestinations => Destinations.Count == 0;
+
+    public void PauseTimer()
+    {
+        IsTimerPaused = true;
+    }
+
+    public void ResumeTimer()
+    {
+        IsTimerPaused = false;
+    }
+
+    public void ExpandToFullList()
+    {
+        IsCollapsed = false;
+        PauseTimer();
+    }
+
+    public void ClearSessionDefault()
+    {
+        _settingsService.SessionDefaultPath = null;
+        OnPropertyChanged(nameof(HasSessionDefault));
+        OnPropertyChanged(nameof(SessionDefaultPath));
+        OnPropertyChanged(nameof(SessionDefaultFolderName));
+        IsCollapsed = false;
+        PauseTimer();
     }
 
     public void ResetTimeout()
@@ -163,7 +299,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
     private void OnTimerTick(object? sender, EventArgs e)
     {
-        if (IsSaving) return;
+        if (IsSaving || IsTimerPaused) return;
 
         _remainingTimeMs -= TimerTickIntervalMs;
         if (_timeoutSeconds > 0)
@@ -174,6 +310,17 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         if (_remainingTimeMs <= 0)
         {
             StopTimer();
+            if (IsCollapsed && HasSessionDefault && !string.IsNullOrWhiteSpace(SessionDefaultPath))
+            {
+                _logger.Info($"Session default auto-saving to: {SessionDefaultPath}");
+                _ = TriggerSaveAsync(new DestinationFolder
+                {
+                    Name = SessionDefaultFolderName,
+                    Path = SessionDefaultPath
+                });
+                return;
+            }
+
             _logger.Debug("Popup auto-dismissed due to inactivity timeout.");
             Dismiss();
         }
@@ -191,11 +338,22 @@ public class CapturePopupViewModel : INotifyPropertyChanged
 
         try
         {
+            if (SetAsSessionDefaultOnSave && !string.IsNullOrWhiteSpace(folder.Path))
+            {
+                _settingsService.SessionDefaultPath = folder.Path;
+            }
+
             var settings = _settingsService.CurrentSettings;
+            string targetFilename = !string.IsNullOrWhiteSpace(Filename)
+                ? (Filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || Filename.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                    ? Filename
+                    : $"{Filename}.png")
+                : DefaultFilename;
+
             var result = await _saveService.SaveImageAsync(
                 PreviewImage,
                 folder.Path,
-                Filename,
+                targetFilename,
                 settings.CopySavedPathToClipboard);
 
             if (result.Success)
@@ -231,6 +389,49 @@ public class CapturePopupViewModel : INotifyPropertyChanged
             StartTimer();
             return false;
         }
+    }
+
+    public async Task<bool> SaveToCustomPathAsync(string customPath, bool addToPresets = false, bool setAsSessionDefault = false)
+    {
+        if (string.IsNullOrWhiteSpace(customPath) || !Directory.Exists(customPath)) return false;
+
+        if (setAsSessionDefault)
+        {
+            _settingsService.SessionDefaultPath = customPath;
+        }
+
+        if (addToPresets)
+        {
+            try
+            {
+                var settings = _settingsService.CurrentSettings;
+                if (!settings.Destinations.Any(d => d.Path.Equals(customPath, StringComparison.OrdinalIgnoreCase)))
+                {
+                    int nextNum = 1;
+                    while (settings.Destinations.Any(d => d.ShortcutNumber == nextNum) && nextNum <= 9)
+                    {
+                        nextNum++;
+                    }
+
+                    settings.Destinations.Add(new DestinationFolder
+                    {
+                        Id = Guid.NewGuid().ToString("N"),
+                        Name = Path.GetFileName(customPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+                        Path = customPath,
+                        ShortcutNumber = nextNum <= 9 ? nextNum : 0,
+                        IsEnabled = true
+                    });
+                    await _settingsService.SaveSettingsAsync(settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to add custom path to presets", ex);
+            }
+        }
+
+        string folderName = Path.GetFileName(customPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        return await TriggerSaveAsync(new DestinationFolder { Name = folderName, Path = customPath });
     }
 
     public async Task<bool> HandleShortcutKeyAsync(int number)

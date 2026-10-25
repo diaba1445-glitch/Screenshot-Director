@@ -5,33 +5,39 @@ namespace ScreenshotDirector.Platform;
 
 public class SingleInstanceManager : ISingleInstanceManager
 {
-    private const string MutexName = @"Local\ScreenshotDirector_SingleInstance_Mutex";
-    private const string EventName = @"Local\ScreenshotDirector_Activate_Event";
+    private const string DefaultMutexName = @"Local\ScreenshotDirector_SingleInstance_Mutex";
+    private const string DefaultEventName = @"Local\ScreenshotDirector_Activate_Event";
 
+    private readonly string _mutexName;
+    private readonly string _eventName;
     private Mutex? _mutex;
     private EventWaitHandle? _activateEvent;
     private RegisteredWaitHandle? _registeredWait;
     private readonly IAppLogger _logger;
+    private bool _ownsMutex;
     private bool _disposed;
 
     public event EventHandler? SecondInstanceLaunched;
 
-    public SingleInstanceManager(IAppLogger logger)
+    public SingleInstanceManager(IAppLogger logger, string? customMutexName = null, string? customEventName = null)
     {
         _logger = logger;
+        _mutexName = customMutexName ?? DefaultMutexName;
+        _eventName = customEventName ?? DefaultEventName;
     }
 
     public bool TryAcquireSingleInstance(out bool isPrimaryInstance)
     {
         try
         {
-            _mutex = new Mutex(true, MutexName, out bool createdNew);
+            _mutex = new Mutex(true, _mutexName, out bool createdNew);
             isPrimaryInstance = createdNew;
+            _ownsMutex = createdNew;
 
             if (isPrimaryInstance)
             {
                 // Create named auto-reset event for activation
-                _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, EventName);
+                _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, _eventName);
                 _registeredWait = ThreadPool.RegisterWaitForSingleObject(
                     _activateEvent,
                     (state, timedOut) =>
@@ -67,7 +73,7 @@ public class SingleInstanceManager : ISingleInstanceManager
     {
         try
         {
-            if (EventWaitHandle.TryOpenExisting(EventName, out var existingEvent))
+            if (EventWaitHandle.TryOpenExisting(_eventName, out var existingEvent))
             {
                 using (existingEvent)
                 {
@@ -92,7 +98,10 @@ public class SingleInstanceManager : ISingleInstanceManager
             _activateEvent?.Dispose();
             if (_mutex != null)
             {
-                _mutex.ReleaseMutex();
+                if (_ownsMutex)
+                {
+                    _mutex.ReleaseMutex();
+                }
                 _mutex.Dispose();
             }
         }

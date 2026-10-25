@@ -18,6 +18,7 @@ public interface ICaptureDetectionService
     void Pause();
     void Resume();
     bool IsPaused { get; }
+    void TriggerTestCapture(CaptureCandidate? candidate = null);
 }
 
 public interface IStartupManager

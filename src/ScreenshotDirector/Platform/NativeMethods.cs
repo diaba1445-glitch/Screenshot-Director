@@ -62,6 +62,10 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     public static extern uint GetDpiForWindow(IntPtr hwnd);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool DestroyIcon(IntPtr hIcon);
+
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT
     {

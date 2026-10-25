@@ -57,6 +57,62 @@ public class CaptureDetectionService : ICaptureDetectionService
         }
     }
 
+    public void TriggerTestCapture(CaptureCandidate? candidate = null)
+    {
+        if (candidate == null)
+        {
+            int width = 480, height = 320, stride = width * 4;
+            byte[] pixels = new byte[height * stride];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int idx = y * stride + x * 4;
+                    pixels[idx] = (byte)(60 + (x * 120 / width));     // B
+                    pixels[idx + 1] = (byte)(90 + (y * 80 / height));  // G
+                    pixels[idx + 2] = 20;                              // R
+                    pixels[idx + 3] = 255;                             // A
+                }
+            }
+            var bmp = System.Windows.Media.Imaging.BitmapSource.Create(
+                width, height, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null, pixels, stride);
+            bmp.Freeze();
+
+            long gen;
+            lock (_stateLock)
+            {
+                _generationCounter++;
+                gen = _generationCounter;
+            }
+
+            candidate = new CaptureCandidate
+            {
+                Generation = gen,
+                CapturedAt = DateTimeOffset.Now,
+                Fingerprint = "TEST_CAPTURE_" + Guid.NewGuid().ToString("N")[..8],
+                Width = width,
+                Height = height,
+                ImageSource = bmp,
+                RawBytes = pixels,
+                ProvenanceReason = "User test capture from Control Center",
+                IsProvenScreenshot = true
+            };
+        }
+
+        _logger.Info($"Test capture triggered: {candidate.Width}x{candidate.Height}");
+        if (Application.Current != null)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ScreenshotDetected?.Invoke(this, candidate);
+            });
+        }
+        else
+        {
+            ScreenshotDetected?.Invoke(this, candidate);
+        }
+    }
+
     public void SuppressNextUpdate(TimeSpan window)
     {
         lock (_stateLock)
@@ -83,7 +139,6 @@ public class CaptureDetectionService : ICaptureDetectionService
 
             // Debounce rapid events
             _debounceCts?.Cancel();
-            _debounceCts?.Dispose();
             _debounceCts = new CancellationTokenSource();
             var token = _debounceCts.Token;
 
@@ -96,7 +151,7 @@ public class CaptureDetectionService : ICaptureDetectionService
 
                     await ProcessClipboardEventAsync(currentGen);
                 }
-                catch (TaskCanceledException)
+                catch (OperationCanceledException)
                 {
                     // Expected on debounce
                 }

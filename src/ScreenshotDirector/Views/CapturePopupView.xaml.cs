@@ -2,6 +2,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using ScreenshotDirector.Core.Models;
 using ScreenshotDirector.Platform;
 using ScreenshotDirector.ViewModels;
 
@@ -10,39 +12,76 @@ namespace ScreenshotDirector.Views;
 public partial class CapturePopupView : Window
 {
     private CapturePopupViewModel? ViewModel => DataContext as CapturePopupViewModel;
+    private bool _isClosing = false;
 
     public CapturePopupView()
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        Closed += OnClosed;
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        ViewModel?.Dismiss();
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        PositionNearCursor();
+        var pos = ViewModel?.Position ?? PopupPosition.BottomRight;
+        PositionOnScreen(pos);
+
         if (ViewModel != null)
         {
-            ViewModel.RequestClose += (s, args) => Close();
+            ViewModel.RequestClose += (s, args) => AnimateClose();
         }
 
         // Focus window so number shortcuts work immediately
         Focus();
     }
 
+    public void AnimateClose()
+    {
+        if (_isClosing) return;
+        _isClosing = true;
+
+        var animDuration = TimeSpan.FromMilliseconds(160);
+        var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
+
+        var fadeAnim = new DoubleAnimation(1.0, 0.0, animDuration) { EasingFunction = ease };
+        var slideAnim = new DoubleAnimation(0.0, 24.0, animDuration) { EasingFunction = ease };
+        var scaleAnimX = new DoubleAnimation(1.0, 0.95, animDuration) { EasingFunction = ease };
+        var scaleAnimY = new DoubleAnimation(1.0, 0.95, animDuration) { EasingFunction = ease };
+
+        fadeAnim.Completed += (s, e) =>
+        {
+            try { Close(); } catch { }
+        };
+
+        BeginAnimation(OpacityProperty, fadeAnim);
+        WindowTranslate.BeginAnimation(TranslateTransform.YProperty, slideAnim);
+        WindowScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimX);
+        WindowScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimY);
+    }
+
     public void PositionNearCursor()
+    {
+        PositionOnScreen(PopupPosition.CursorAdjacent);
+    }
+
+    public void PositionOnScreen(PopupPosition position = PopupPosition.BottomRight)
     {
         try
         {
-            if (!NativeMethods.GetCursorPos(out var pt))
-            {
-                CenterOnPrimaryScreen();
-                return;
-            }
+            NativeMethods.POINT pt;
+            bool hasCursor = NativeMethods.GetCursorPos(out pt);
+            IntPtr monitor = hasCursor
+                ? NativeMethods.MonitorFromPoint(pt, NativeMethods.MONITOR_DEFAULTTONEAREST)
+                : IntPtr.Zero;
 
-            var monitor = NativeMethods.MonitorFromPoint(pt, NativeMethods.MONITOR_DEFAULTTONEAREST);
             var mi = new NativeMethods.MONITORINFO { cbSize = System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.MONITORINFO>() };
 
-            if (!NativeMethods.GetMonitorInfo(monitor, ref mi))
+            if (monitor == IntPtr.Zero || !NativeMethods.GetMonitorInfo(monitor, ref mi))
             {
                 CenterOnPrimaryScreen();
                 return;
@@ -61,42 +100,60 @@ public partial class CapturePopupView : Window
             double workRight = workLeft + workWidth;
             double workBottom = workTop + workHeight;
 
-            // Cursor pos in DIPs
-            double cursorX = pt.X / dpiX;
-            double cursorY = pt.Y / dpiY;
-
             UpdateLayout();
             double popupWidth = ActualWidth > 0 ? ActualWidth : Width;
             double popupHeight = ActualHeight > 0 ? ActualHeight : 350;
 
-            // Target offset from cursor
-            double targetLeft = cursorX + 15;
-            double targetTop = cursorY + 15;
+            const double Margin = 24.0;
 
-            // Clamp / flip if exceeding work area boundaries
-            if (targetLeft + popupWidth > workRight)
+            switch (position)
             {
-                targetLeft = cursorX - popupWidth - 15;
-            }
+                case PopupPosition.BottomRight:
+                    Left = workRight - popupWidth - Margin;
+                    Top = workBottom - popupHeight - Margin;
+                    break;
 
-            if (targetTop + popupHeight > workBottom)
-            {
-                targetTop = cursorY - popupHeight - 15;
-            }
+                case PopupPosition.TopRight:
+                    Left = workRight - popupWidth - Margin;
+                    Top = workTop + Margin;
+                    break;
 
-            // Ensure not off-screen to the left or top
-            if (targetLeft < workLeft)
-            {
-                targetLeft = workLeft + 10;
-            }
+                case PopupPosition.BottomCenter:
+                    Left = workLeft + (workWidth - popupWidth) / 2.0;
+                    Top = workBottom - popupHeight - Margin;
+                    break;
 
-            if (targetTop < workTop)
-            {
-                targetTop = workTop + 10;
-            }
+                case PopupPosition.CursorAdjacent:
+                    if (hasCursor)
+                    {
+                        double cursorX = pt.X / dpiX;
+                        double cursorY = pt.Y / dpiY;
+                        double targetLeft = cursorX + 15;
+                        double targetTop = cursorY + 15;
 
-            Left = targetLeft;
-            Top = targetTop;
+                        if (targetLeft + popupWidth > workRight)
+                            targetLeft = cursorX - popupWidth - 15;
+                        if (targetTop + popupHeight > workBottom)
+                            targetTop = cursorY - popupHeight - 15;
+
+                        if (targetLeft < workLeft) targetLeft = workLeft + 10;
+                        if (targetTop < workTop) targetTop = workTop + 10;
+
+                        Left = targetLeft;
+                        Top = targetTop;
+                    }
+                    else
+                    {
+                        Left = workRight - popupWidth - Margin;
+                        Top = workBottom - popupHeight - Margin;
+                    }
+                    break;
+
+                default:
+                    Left = workRight - popupWidth - Margin;
+                    Top = workBottom - popupHeight - Margin;
+                    break;
+            }
         }
         catch
         {
@@ -115,12 +172,19 @@ public partial class CapturePopupView : Window
     {
         if (ViewModel == null) return;
 
-        ViewModel.ResetTimeout();
-
         if (e.Key == System.Windows.Input.Key.Escape)
         {
             e.Handled = true;
-            ViewModel.Dismiss();
+            if (ViewModel.IsCustomPathSelected)
+            {
+                ViewModel.IsCustomPathSelected = false;
+                UpdateLayout();
+                PositionOnScreen(ViewModel.Position);
+            }
+            else
+            {
+                ViewModel.Dismiss();
+            }
             return;
         }
 
@@ -145,16 +209,20 @@ public partial class CapturePopupView : Window
         }
     }
 
+    private void OnFilenameGotFocus(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.PauseTimer();
+    }
+
     private async void OnFilenameKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (ViewModel == null) return;
 
-        ViewModel.ResetTimeout();
+        ViewModel.PauseTimer();
 
         if (e.Key == System.Windows.Input.Key.Enter)
         {
             e.Handled = true;
-            // Save to first destination
             var first = ViewModel.Destinations.FirstOrDefault();
             if (first != null)
             {
@@ -170,17 +238,19 @@ public partial class CapturePopupView : Window
 
     private void OnFilenameTextChanged(object sender, TextChangedEventArgs e)
     {
-        ViewModel?.ResetTimeout();
-    }
-
-    private void OnWindowMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
-    {
-        ViewModel?.ResetTimeout();
+        ViewModel?.PauseTimer();
     }
 
     private void OnDismissClick(object sender, RoutedEventArgs e)
     {
-        ViewModel?.Dismiss();
+        if (ViewModel != null)
+        {
+            ViewModel.Dismiss();
+        }
+        else
+        {
+            AnimateClose();
+        }
     }
 
     private async void OnDestinationClick(object sender, RoutedEventArgs e)
@@ -188,6 +258,80 @@ public partial class CapturePopupView : Window
         if (sender is Button btn && btn.DataContext is DestinationItemViewModel item && ViewModel != null)
         {
             await ViewModel.TriggerSaveAsync(item.Folder);
+        }
+    }
+
+    private async void OnSaveSessionDefaultNowClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null && !string.IsNullOrWhiteSpace(ViewModel.SessionDefaultPath))
+        {
+            await ViewModel.TriggerSaveAsync(new DestinationFolder
+            {
+                Name = ViewModel.SessionDefaultFolderName,
+                Path = ViewModel.SessionDefaultPath
+            });
+        }
+    }
+
+    private void OnExpandToFullClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.ExpandToFullList();
+            UpdateLayout();
+            PositionOnScreen(ViewModel.Position);
+        }
+    }
+
+    private void OnClearSessionDefaultClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.ClearSessionDefault();
+            UpdateLayout();
+            PositionOnScreen(ViewModel.Position);
+        }
+    }
+
+    private void OnSelectPathClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel == null) return;
+        ViewModel.PauseTimer();
+
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Select Destination Folder for this Screenshot",
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = true
+        };
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            ViewModel.SelectedCustomPath = dialog.SelectedPath;
+            ViewModel.IsCustomPathSelected = true;
+            UpdateLayout();
+            PositionOnScreen(ViewModel.Position);
+        }
+    }
+
+    private async void OnConfirmSaveCustomPathClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null && !string.IsNullOrWhiteSpace(ViewModel.SelectedCustomPath))
+        {
+            await ViewModel.SaveToCustomPathAsync(
+                ViewModel.SelectedCustomPath, 
+                ViewModel.AddCustomPathToPresets, 
+                ViewModel.SetAsSessionDefaultOnSave);
+        }
+    }
+
+    private void OnCancelCustomPathClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.IsCustomPathSelected = false;
+            UpdateLayout();
+            PositionOnScreen(ViewModel.Position);
         }
     }
 }

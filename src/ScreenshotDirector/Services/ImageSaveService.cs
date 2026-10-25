@@ -170,49 +170,53 @@ public class ImageSaveService : IImageSaveService
             return SaveResult.Failed(SaveErrorType.EncodingError, "Encoded PNG byte stream is empty.");
         }
 
-        // Atomic write with collision handling using FileMode.CreateNew to prevent race conditions
+        // Atomic write with collision handling using a single staging file committed via File.Move
         string targetFilePath = string.Empty;
+        string tempFilePath = Path.Combine(destinationPath, $".tmp_{Guid.NewGuid():N}.tmp");
         const int maxCollisionAttempts = 100;
         int attempt = 0;
         bool writeSuccess = false;
 
-        while (attempt < maxCollisionAttempts && !writeSuccess)
+        try
         {
-            string candidateFilename;
-            if (attempt == 0)
+            // Write to a temporary staging file in the destination folder once
+            using (var fs = new FileStream(tempFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
-                candidateFilename = validFilename;
-            }
-            else
-            {
-                string nameWithoutExt = Path.GetFileNameWithoutExtension(validFilename);
-                string ext = Path.GetExtension(validFilename);
-                candidateFilename = $"{nameWithoutExt} ({attempt}){ext}";
+                await fs.WriteAsync(pngBytes, 0, pngBytes.Length);
+                await fs.FlushAsync();
             }
 
-            targetFilePath = Path.Combine(destinationPath, candidateFilename);
-
-            try
+            // Verify temp file
+            var tempInfo = new FileInfo(tempFilePath);
+            if (tempInfo.Length != pngBytes.Length)
             {
-                // Write to a temporary file in the destination folder then safely move/commit
-                string tempFilePath = Path.Combine(destinationPath, $".tmp_{Guid.NewGuid():N}.tmp");
+                try { File.Delete(tempFilePath); } catch { }
+                return SaveResult.Failed(SaveErrorType.EncodingError, "Incomplete write detected.");
+            }
 
-                using (var fs = new FileStream(tempFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            // Find an available filename and atomically commit the staging file
+            while (attempt < maxCollisionAttempts && !writeSuccess)
+            {
+                string candidateFilename;
+                if (attempt == 0)
                 {
-                    await fs.WriteAsync(pngBytes, 0, pngBytes.Length);
-                    await fs.FlushAsync();
+                    candidateFilename = validFilename;
+                }
+                else
+                {
+                    string nameWithoutExt = Path.GetFileNameWithoutExtension(validFilename);
+                    string ext = Path.GetExtension(validFilename);
+                    candidateFilename = $"{nameWithoutExt} ({attempt}){ext}";
                 }
 
-                // Verify temp file
-                var tempInfo = new FileInfo(tempFilePath);
-                if (tempInfo.Length != pngBytes.Length)
+                targetFilePath = Path.Combine(destinationPath, candidateFilename);
+
+                if (File.Exists(targetFilePath))
                 {
-                    try { File.Delete(tempFilePath); } catch { }
-                    return SaveResult.Failed(SaveErrorType.EncodingError, "Incomplete write detected.");
+                    attempt++;
+                    continue;
                 }
 
-                // Atomically move temp file to target with FileMode.CreateNew semantics
-                // If targetFilePath already exists, File.Move(source, dest, overwrite: false) throws IOException
                 try
                 {
                     File.Move(tempFilePath, targetFilePath, overwrite: false);
@@ -220,31 +224,34 @@ public class ImageSaveService : IImageSaveService
                 }
                 catch (IOException)
                 {
-                    // Collision occurred! Clean up temp file and retry with next suffix
-                    try { File.Delete(tempFilePath); } catch { }
+                    // Target already exists due to race condition; try next suffix
                     attempt++;
                 }
             }
-            catch (UnauthorizedAccessException ex)
+
+            if (!writeSuccess)
             {
-                _logger.Error($"Access denied writing file: {targetFilePath}", ex);
-                return SaveResult.Failed(SaveErrorType.WriteAccessDenied, "Access denied to destination folder.");
-            }
-            catch (IOException ex) when (IsDiskFull(ex))
-            {
-                _logger.Error("Disk full while writing screenshot", ex);
-                return SaveResult.Failed(SaveErrorType.DiskFull, "Not enough disk space available.");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"File write error for {targetFilePath}", ex);
-                return SaveResult.Failed(SaveErrorType.Unknown, $"Save failed: {ex.Message}");
+                try { File.Delete(tempFilePath); } catch { }
+                return SaveResult.Failed(SaveErrorType.Unknown, "Could not resolve a unique filename after multiple attempts.");
             }
         }
-
-        if (!writeSuccess)
+        catch (UnauthorizedAccessException ex)
         {
-            return SaveResult.Failed(SaveErrorType.Unknown, "Could not resolve a unique filename after multiple attempts.");
+            try { File.Delete(tempFilePath); } catch { }
+            _logger.Error($"Access denied writing file: {targetFilePath}", ex);
+            return SaveResult.Failed(SaveErrorType.WriteAccessDenied, "Access denied to destination folder.");
+        }
+        catch (IOException ex) when (IsDiskFull(ex))
+        {
+            try { File.Delete(tempFilePath); } catch { }
+            _logger.Error("Disk full while writing screenshot", ex);
+            return SaveResult.Failed(SaveErrorType.DiskFull, "Not enough disk space available.");
+        }
+        catch (Exception ex)
+        {
+            try { File.Delete(tempFilePath); } catch { }
+            _logger.Error($"File write error for {targetFilePath}", ex);
+            return SaveResult.Failed(SaveErrorType.Unknown, $"Save failed: {ex.Message}");
         }
 
         _logger.Info($"Successfully saved screenshot to: {targetFilePath} ({pngBytes.Length} bytes)");

@@ -37,12 +37,12 @@ public class TrayIconManager : IDisposable
 
         var contextMenu = new ContextMenuStrip();
 
-        var openItem = new ToolStripMenuItem("Open Settings", null, (s, e) => _openSettingsAction());
+        var openItem = new ToolStripMenuItem("Open Control Center", null, (s, e) => _openSettingsAction());
         openItem.Font = new Font(openItem.Font, FontStyle.Bold);
 
         _pauseItem = new ToolStripMenuItem("Pause Detection", null, OnTogglePause);
-        var manageItem = new ToolStripMenuItem("Manage Destinations", null, (s, e) => _openSettingsAction());
-        var exitItem = new ToolStripMenuItem("Exit", null, (s, e) => _exitAction());
+        var manageItem = new ToolStripMenuItem("Manage Presets", null, (s, e) => _openSettingsAction());
+        var exitItem = new ToolStripMenuItem("Stop Program & Exit", null, (s, e) => _exitAction());
 
         contextMenu.Items.Add(openItem);
         contextMenu.Items.Add(_pauseItem);
@@ -89,7 +89,14 @@ public class TrayIconManager : IDisposable
                 g.FillEllipse(innerLensBrush, 13, 13, 6, 6);
             }
             var hIcon = bmp.GetHicon();
-            return Icon.FromHandle(hIcon);
+            try
+            {
+                return (Icon)Icon.FromHandle(hIcon).Clone();
+            }
+            finally
+            {
+                NativeMethods.DestroyIcon(hIcon);
+            }
         }
         catch
         {
