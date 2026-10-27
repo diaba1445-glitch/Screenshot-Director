@@ -260,29 +260,65 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Thumbnail -->
-                    <Border Grid.Column="0" 
+                    <!-- Thumbnail with Snipping Tool Click Trigger -->
+                    <Button Grid.Column="0" 
                             Width="64" Height="48" 
-                            CornerRadius="6" 
-                            BorderThickness="1" 
-                            ClipToBounds="True">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="#090810"/>
-                                <Setter Property="BorderBrush" Value="#382E57"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                        <Setter Property="Background" Value="#F1F5F9"/>
-                                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Image Source="{Binding PreviewImage}" 
-                               Stretch="UniformToFill" 
-                               HorizontalAlignment="Center" 
-                               VerticalAlignment="Center"/>
-                    </Border>
+                            Padding="0" Margin="0" 
+                            Background="Transparent" 
+                            BorderThickness="0" 
+                            Cursor="Hand"
+                            Click="OnThumbnailButtonClick"
+                            ToolTip="Click to open built-in Snipping &amp; Markup Tool">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Width="64" Height="48" 
+                                        CornerRadius="6" 
+                                        BorderThickness="1" 
+                                        ClipToBounds="True">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#090810"/>
+                                            <Setter Property="BorderBrush" Value="#382E57"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                    <Setter Property="Background" Value="#F1F5F9"/>
+                                                    <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#C084FC"/>
+                                                    <Setter Property="BorderThickness" Value="1.5"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Image Source="{Binding PreviewImage}" 
+                                               Stretch="UniformToFill" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
+                                        <Border Background="#B30F0D1A" 
+                                                Opacity="0"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                            <Setter Property="Opacity" Value="1"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="✂️" FontSize="13" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Snip" FontSize="8" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
 
                     <!-- Content & Actions -->
                     <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
@@ -530,29 +566,65 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Thumbnail -->
-                        <Border Grid.Column="0" 
+                        <!-- Thumbnail with Snipping Tool Click Trigger -->
+                        <Button Grid.Column="0" 
                                 Width="74" Height="52" 
-                                CornerRadius="6" 
-                                BorderThickness="1" 
-                                ClipToBounds="True">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="#0A0910"/>
-                                    <Setter Property="BorderBrush" Value="#382F57"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Background" Value="#F1F5F9"/>
-                                            <Setter Property="BorderBrush" Value="#CBD5E1"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <Image Source="{Binding PreviewImage}" 
-                                   Stretch="UniformToFill" 
-                                   HorizontalAlignment="Center" 
-                                   VerticalAlignment="Center"/>
-                        </Border>
+                                Padding="0" Margin="0" 
+                                Background="Transparent" 
+                                BorderThickness="0" 
+                                Cursor="Hand"
+                                Click="OnThumbnailButtonClick"
+                                ToolTip="Click to open built-in Snipping &amp; Markup Tool">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Width="74" Height="52" 
+                                            CornerRadius="6" 
+                                            BorderThickness="1" 
+                                            ClipToBounds="True">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#0A0910"/>
+                                                <Setter Property="BorderBrush" Value="#382F57"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                        <Setter Property="Background" Value="#F1F5F9"/>
+                                                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                                    </DataTrigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#C084FC"/>
+                                                        <Setter Property="BorderThickness" Value="1.5"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Image Source="{Binding PreviewImage}" 
+                                                   Stretch="UniformToFill" 
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"/>
+                                            <Border Background="#B30F0D1A" 
+                                                    Opacity="0"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                                <Setter Property="Opacity" Value="1"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="✂️" FontSize="14" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Snip &amp; Edit" FontSize="8" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
 
                         <!-- Filename Input with Placeholder & Resolution -->
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">

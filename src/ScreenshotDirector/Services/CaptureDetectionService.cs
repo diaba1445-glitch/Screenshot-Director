@@ -20,6 +20,7 @@ public class CaptureDetectionService : ICaptureDetectionService
 
     private static readonly TimeSpan DuplicateCooldown = TimeSpan.FromSeconds(2.0);
     private const int DebounceDelayMs = 250;
+    private const string ClipboardHistoryItemIdFormat = "ClipboardHistoryItemId";
 
     public event EventHandler<CaptureCandidate>? ScreenshotDetected;
 
@@ -259,11 +260,7 @@ public class CaptureDetectionService : ICaptureDetectionService
                 return (false, "No clipboard formats present", false);
             }
 
-            // If it's a file copy (e.g. copying an existing image file from Explorer), reject
-            if (data.GetDataPresent(DataFormats.FileDrop))
-            {
-                return (false, "Content is FileDrop (existing file copied)", false);
-            }
+            bool hasFileDrop = data.GetDataPresent(DataFormats.FileDrop);
 
             // Check if there is an image format
             bool hasImageFormat = data.GetDataPresent(DataFormats.Bitmap) ||
@@ -272,73 +269,99 @@ public class CaptureDetectionService : ICaptureDetectionService
                                                    f.Equals("Format17", StringComparison.OrdinalIgnoreCase) || // CF_DIBV5
                                                    f.Equals("PNG", StringComparison.OrdinalIgnoreCase));
 
-            if (!hasImageFormat)
-            {
-                return (false, "No bitmap or image format present", false);
-            }
-
-            // Check for web browser image copy markers
-            bool hasBrowserMarkers = formats.Any(f =>
-                f.Equals("HTML Format", StringComparison.OrdinalIgnoreCase) ||
-                f.Equals("text/html", StringComparison.OrdinalIgnoreCase) ||
-                f.Equals("UniformResourceLocatorW", StringComparison.OrdinalIgnoreCase) ||
-                f.Equals("UniformResourceLocator", StringComparison.OrdinalIgnoreCase) ||
-                f.Equals("SourceURL", StringComparison.OrdinalIgnoreCase));
-
-            // Check for Office document markers
-            bool hasOfficeMarkers = formats.Any(f =>
-                f.Equals("Rich Text Format", StringComparison.OrdinalIgnoreCase) ||
-                f.Equals("Embed Source", StringComparison.OrdinalIgnoreCase) ||
-                f.Equals("Object Descriptor", StringComparison.OrdinalIgnoreCase));
-
             var settings = _settingsService.CurrentSettings;
-            bool conservative = settings.ClipboardDetectionMode == ClipboardDetectionMode.Conservative;
-
-            if (conservative)
-            {
-                if (hasBrowserMarkers)
-                {
-                    return (false, "Rejected: contains browser HTML/URL formats (web copy)", false);
-                }
-
-                if (hasOfficeMarkers)
-                {
-                    return (false, "Rejected: contains Office document embed formats", false);
-                }
-
-                // Windows Snipping Tool / Win+Shift+S / PrtScn characteristic:
-                // Has DIB/Bitmap, does NOT have browser/office markers.
-                // May have "CanIncludeInClipboardHistory" or standard DIB.
-                bool hasHistoryFormat = formats.Any(f => f.Equals("CanIncludeInClipboardHistory", StringComparison.OrdinalIgnoreCase));
-
-                string reason = hasHistoryFormat
-                    ? "Windows Snipping / Shell capture (CanIncludeInClipboardHistory present)"
-                    : "Standalone bitmap capture (clean DIB without document/browser markers)";
-
-                return (true, reason, true);
-            }
-            else
-            {
-                // GenericFallback mode
-                if (settings.GenericImageFallbackEnabled)
-                {
-                    return (true, "Generic image fallback accepted", false);
-                }
-                else
-                {
-                    // Conservative check failed and fallback is disabled
-                    if (hasBrowserMarkers || hasOfficeMarkers)
-                    {
-                        return (false, "Rejected by conservative policy (fallback disabled)", false);
-                    }
-                    return (true, "Clean image format accepted", false);
-                }
-            }
+            return ClassifyClipboardFormats(formats, hasFileDrop, hasImageFormat, settings);
         }
         catch (Exception ex)
         {
             _logger.Warning("Error inspecting clipboard formats", ex);
             return (false, $"Inspection error: {ex.Message}", false);
+        }
+    }
+
+    /// <summary>
+    /// Pure format-based classification, separated from clipboard access for testability.
+    /// </summary>
+    public static (bool isCandidate, string reason, bool isProven) ClassifyClipboardFormats(
+        IReadOnlyCollection<string> formats,
+        bool hasFileDrop,
+        bool hasImageFormat,
+        AppSettings settings)
+    {
+        // If it's a file copy (e.g. copying an existing image file from Explorer), reject
+        if (hasFileDrop)
+        {
+            return (false, "Content is FileDrop (existing file copied)", false);
+        }
+
+        if (!hasImageFormat)
+        {
+            return (false, "No bitmap or image format present", false);
+        }
+
+        // Pasting an item from Windows clipboard history restores the bitmap with this
+        // system format. A fresh copy (including Snipping Tool captures) does not have it.
+        // Reject regardless of detection mode so history replays never appear as new captures.
+        if (formats.Any(f => f.Equals(ClipboardHistoryItemIdFormat, StringComparison.OrdinalIgnoreCase)))
+        {
+            return (false, "Rejected: bitmap restored from Windows clipboard history", false);
+        }
+
+        // Check for web browser image copy markers
+        bool hasBrowserMarkers = formats.Any(f =>
+            f.Equals("HTML Format", StringComparison.OrdinalIgnoreCase) ||
+            f.Equals("text/html", StringComparison.OrdinalIgnoreCase) ||
+            f.Equals("UniformResourceLocatorW", StringComparison.OrdinalIgnoreCase) ||
+            f.Equals("UniformResourceLocator", StringComparison.OrdinalIgnoreCase) ||
+            f.Equals("SourceURL", StringComparison.OrdinalIgnoreCase));
+
+        // Check for Office document markers
+        bool hasOfficeMarkers = formats.Any(f =>
+            f.Equals("Rich Text Format", StringComparison.OrdinalIgnoreCase) ||
+            f.Equals("Embed Source", StringComparison.OrdinalIgnoreCase) ||
+            f.Equals("Object Descriptor", StringComparison.OrdinalIgnoreCase));
+
+        bool conservative = settings.ClipboardDetectionMode == ClipboardDetectionMode.Conservative;
+
+        if (conservative)
+        {
+            if (hasBrowserMarkers)
+            {
+                return (false, "Rejected: contains browser HTML/URL formats (web copy)", false);
+            }
+
+            if (hasOfficeMarkers)
+            {
+                return (false, "Rejected: contains Office document embed formats", false);
+            }
+
+            // Windows Snipping Tool / Win+Shift+S / PrtScn characteristic:
+            // Has DIB/Bitmap, does NOT have browser/office markers.
+            // May have "CanIncludeInClipboardHistory" or standard DIB.
+            bool hasHistoryFormat = formats.Any(f => f.Equals("CanIncludeInClipboardHistory", StringComparison.OrdinalIgnoreCase));
+
+            string reason = hasHistoryFormat
+                ? "Windows Snipping / Shell capture (CanIncludeInClipboardHistory present)"
+                : "Standalone bitmap capture (clean DIB without document/browser markers)";
+
+            return (true, reason, true);
+        }
+        else
+        {
+            // GenericFallback mode
+            if (settings.GenericImageFallbackEnabled)
+            {
+                return (true, "Generic image fallback accepted", false);
+            }
+            else
+            {
+                // Conservative check failed and fallback is disabled
+                if (hasBrowserMarkers || hasOfficeMarkers)
+                {
+                    return (false, "Rejected by conservative policy (fallback disabled)", false);
+                }
+                return (true, "Clean image format accepted", false);
+            }
         }
     }
 }

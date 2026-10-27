@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using ScreenshotDirector.Core.Models;
@@ -11,27 +13,184 @@ namespace ScreenshotDirector.Views;
 
 public partial class CapturePopupView : Window
 {
+    private const int EscapeHotkeyId = 0x5345; // Arbitrary per-window hotkey id
+
     private CapturePopupViewModel? ViewModel => DataContext as CapturePopupViewModel;
     private bool _isClosing = false;
+    private bool _isClosed = false;
+    private HwndSource? _escapeHotkeySource;
+    private IntPtr _escapeHotkeyWindow = IntPtr.Zero;
+    private bool _escapeHotkeyRegistered;
+    private SnippingToolWindow? _snippingWindow;
 
     public CapturePopupView()
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        Closing += OnClosing;
         Closed += OnClosed;
         Deactivated += OnDeactivated;
     }
 
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        UnregisterEscapeHotkey();
+    }
+
     private void OnClosed(object? sender, EventArgs e)
     {
+        _isClosing = true;
+        _isClosed = true;
+        UnregisterEscapeHotkey();
+
+        try { _snippingWindow?.Close(); } catch { }
+        _snippingWindow = null;
+
         ViewModel?.Dismiss();
+    }
+
+    /// <summary>
+    /// Registers Escape system-wide while this popup is visible, so it can be
+    /// dismissed even when the user has clicked into another application.
+    /// </summary>
+    private void RegisterEscapeHotkey()
+    {
+        if (_escapeHotkeyRegistered || _isClosing || _isClosed || !IsLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            var helper = new WindowInteropHelper(this);
+            if (helper.Handle == IntPtr.Zero)
+            {
+                return;
+            }
+
+            _escapeHotkeySource = HwndSource.FromHwnd(helper.Handle);
+            if (_escapeHotkeySource == null)
+            {
+                ViewModel?.Logger?.Warning("Could not attach to the popup window for the global Escape hotkey.");
+                return;
+            }
+
+            if (NativeMethods.RegisterHotKey(
+                    helper.Handle,
+                    EscapeHotkeyId,
+                    NativeMethods.MOD_NOREPEAT,
+                    NativeMethods.VK_ESCAPE))
+            {
+                _escapeHotkeyWindow = helper.Handle;
+                _escapeHotkeyRegistered = true;
+
+                try
+                {
+                    _escapeHotkeySource.AddHook(EscapeHotkeyWndProc);
+                    ViewModel?.Logger?.Info("Registered global Escape hotkey for capture popup.");
+                }
+                catch
+                {
+                    UnregisterEscapeHotkey();
+                    throw;
+                }
+            }
+            else
+            {
+                _escapeHotkeySource = null;
+                int error = Marshal.GetLastWin32Error();
+                ViewModel?.Logger?.Warning(
+                    $"Could not register global Escape hotkey (Win32 error {error}). Esc stays focus-only.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ViewModel?.Logger?.Error("Failed to register global Escape hotkey", ex);
+        }
+    }
+
+    private void UnregisterEscapeHotkey()
+    {
+        if (_escapeHotkeyRegistered && _escapeHotkeyWindow != IntPtr.Zero)
+        {
+            try
+            {
+                NativeMethods.UnregisterHotKey(_escapeHotkeyWindow, EscapeHotkeyId);
+            }
+            catch (Exception ex)
+            {
+                ViewModel?.Logger?.Warning("Failed to unregister global Escape hotkey", ex);
+            }
+        }
+
+        _escapeHotkeyRegistered = false;
+        _escapeHotkeyWindow = IntPtr.Zero;
+
+        if (_escapeHotkeySource != null)
+        {
+            try { _escapeHotkeySource.RemoveHook(EscapeHotkeyWndProc); } catch { }
+            _escapeHotkeySource = null;
+        }
+    }
+
+    private void SuspendEscapeHotkey() => UnregisterEscapeHotkey();
+
+    private void ResumeEscapeHotkey()
+    {
+        // While our own snipping editor or a modal dialog is open, let that
+        // window handle Escape normally instead of dismissing the popup.
+        if (!_isClosing && !_isClosed && ViewModel?.IsSnippingToolOpen != true)
+        {
+            RegisterEscapeHotkey();
+        }
+    }
+
+    private IntPtr EscapeHotkeyWndProc(
+        IntPtr hwnd,
+        int msg,
+        IntPtr wParam,
+        IntPtr lParam,
+        ref bool handled)
+    {
+        if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == EscapeHotkeyId)
+        {
+            handled = true;
+            Dispatcher.BeginInvoke(new Action(HandleEscapeKey));
+        }
+
+        return IntPtr.Zero;
+    }
+
+    private void HandleEscapeKey()
+    {
+        if (ViewModel == null || _isClosing || _isClosed)
+        {
+            return;
+        }
+
+        if (ViewModel.IsCustomPathSelected)
+        {
+            ViewModel.IsCustomPathSelected = false;
+            UpdateLayout();
+            PositionOnScreen(ViewModel.Position);
+        }
+        else
+        {
+            ViewModel.Dismiss();
+        }
     }
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
         ViewModel?.ResetPointerHoverState();
 
-        // If the user activated an image markup editor (e.g. Snipping Tool), dismiss this popup immediately
+        // If our built-in snipping tool is currently open, keep popup open and paused
+        if (ViewModel != null && ViewModel.IsSnippingToolOpen)
+        {
+            return;
+        }
+
+        // If the user activated an external image markup editor, dismiss this popup immediately
         // so it does not persist over the editing canvas or cause DWM lag.
         if (NativeMethods.IsForegroundMarkupEditor())
         {
@@ -50,6 +209,10 @@ public partial class CapturePopupView : Window
             for (int i = 0; i < 15 && !_isClosing; i++)
             {
                 await Task.Delay(100);
+                if (ViewModel != null && ViewModel.IsSnippingToolOpen)
+                {
+                    return;
+                }
                 if (!_isClosing && NativeMethods.IsForegroundMarkupEditor())
                 {
                     AnimateClose();
@@ -77,6 +240,8 @@ public partial class CapturePopupView : Window
             ViewModel.RequestClose += (s, args) => AnimateClose();
         }
 
+        RegisterEscapeHotkey();
+
         // Focus window so number shortcuts work immediately
         Focus();
     }
@@ -95,6 +260,7 @@ public partial class CapturePopupView : Window
     {
         if (_isClosing) return;
         _isClosing = true;
+        UnregisterEscapeHotkey();
 
         var animDuration = TimeSpan.FromMilliseconds(160);
         var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
@@ -227,16 +393,7 @@ public partial class CapturePopupView : Window
         if (e.Key == System.Windows.Input.Key.Escape)
         {
             e.Handled = true;
-            if (ViewModel.IsCustomPathSelected)
-            {
-                ViewModel.IsCustomPathSelected = false;
-                UpdateLayout();
-                PositionOnScreen(ViewModel.Position);
-            }
-            else
-            {
-                ViewModel.Dismiss();
-            }
+            HandleEscapeKey();
             return;
         }
 
@@ -289,7 +446,7 @@ public partial class CapturePopupView : Window
         else if (e.Key == System.Windows.Input.Key.Escape)
         {
             e.Handled = true;
-            ViewModel.Dismiss();
+            HandleEscapeKey();
         }
     }
 
@@ -367,12 +524,20 @@ public partial class CapturePopupView : Window
             ShowNewFolderButton = true
         };
 
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        SuspendEscapeHotkey();
+        try
         {
-            ViewModel.SelectedCustomPath = dialog.SelectedPath;
-            ViewModel.IsCustomPathSelected = true;
-            UpdateLayout();
-            PositionOnScreen(ViewModel.Position);
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                ViewModel.SelectedCustomPath = dialog.SelectedPath;
+                ViewModel.IsCustomPathSelected = true;
+                UpdateLayout();
+                PositionOnScreen(ViewModel.Position);
+            }
+        }
+        finally
+        {
+            ResumeEscapeHotkey();
         }
     }
 
@@ -395,5 +560,89 @@ public partial class CapturePopupView : Window
             UpdateLayout();
             PositionOnScreen(ViewModel.Position);
         }
+    }
+
+    private void OnThumbnailButtonClick(object sender, RoutedEventArgs e)
+    {
+        OpenSnippingTool();
+    }
+
+    private void OpenSnippingTool()
+    {
+        if (ViewModel == null)
+        {
+            ViewModel?.Logger?.Warning("OpenSnippingTool: ViewModel is null");
+            return;
+        }
+
+        if (ViewModel.PreviewImage == null)
+        {
+            ViewModel.Logger?.Warning("OpenSnippingTool: PreviewImage is null");
+            return;
+        }
+
+        if (ViewModel.IsSnippingToolOpen)
+        {
+            ViewModel.Logger?.Warning("OpenSnippingTool: SnippingTool is already open");
+            return;
+        }
+
+        ViewModel.PauseTimer();
+        ViewModel.IsSnippingToolOpen = true;
+
+        var snippingVm = new SnippingToolViewModel(
+            ViewModel.PreviewImage,
+            ViewModel.SaveService,
+            ViewModel.NotificationService,
+            ViewModel.SettingsService,
+            ViewModel.DetectionService,
+            ViewModel.Logger);
+
+        bool applied = false;
+        snippingVm.ApplyEditsRequested += (newBitmap) =>
+        {
+            applied = true;
+            ViewModel.UpdatePreviewImage(newBitmap);
+        };
+
+        snippingVm.SavedDirectly += () =>
+        {
+            AnimateClose();
+        };
+
+        var snippingWindow = new SnippingToolWindow(snippingVm);
+        snippingWindow.Owner = this;
+        _snippingWindow = snippingWindow;
+
+        snippingWindow.Closed += (s, args) =>
+        {
+            if (ReferenceEquals(_snippingWindow, snippingWindow))
+            {
+                _snippingWindow = null;
+            }
+
+            if (_isClosed)
+            {
+                return;
+            }
+
+            ViewModel.IsSnippingToolOpen = false;
+            if (applied)
+            {
+                Activate();
+                Focus();
+            }
+            else
+            {
+                ViewModel.ResumeTimer();
+            }
+
+            ResumeEscapeHotkey();
+        };
+
+        // The editor owns Escape while it is open (cancel crop/text, then close).
+        SuspendEscapeHotkey();
+        snippingWindow.Show();
+        snippingWindow.Activate();
     }
 }

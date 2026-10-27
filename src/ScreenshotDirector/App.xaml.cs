@@ -224,7 +224,7 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+        var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger, _detectionService);
         vm.Initialize(candidate);
 
         var popup = new CapturePopupView

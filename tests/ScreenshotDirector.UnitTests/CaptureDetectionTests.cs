@@ -80,6 +80,72 @@ public class CaptureDetectionTests : IDisposable
     }
 
     [Fact]
+    public void ClassifyClipboardFormats_RejectsClipboardHistoryRestore()
+    {
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+        var formats = new[]
+        {
+            "Bitmap",
+            "System.Drawing.Bitmap",
+            "CanIncludeInClipboardHistory",
+            "ExcludeClipboardContentFromMonitorProcessing",
+            "ClipboardHistoryItemId"
+        };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            formats, hasFileDrop: false, hasImageFormat: true, settings);
+
+        Assert.False(result.isCandidate);
+        Assert.False(result.isProven);
+        Assert.Contains("clipboard history", result.reason, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ClassifyClipboardFormats_RejectsClipboardHistoryRestoreInGenericMode()
+    {
+        var settings = new AppSettings
+        {
+            ClipboardDetectionMode = ClipboardDetectionMode.GenericFallback,
+            GenericImageFallbackEnabled = true
+        };
+        var formats = new[] { "Bitmap", "ClipboardHistoryItemId" };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            formats, hasFileDrop: false, hasImageFormat: true, settings);
+
+        Assert.False(result.isCandidate);
+        Assert.False(result.isProven);
+    }
+
+    [Fact]
+    public void ClassifyClipboardFormats_AcceptsFreshScreenshot()
+    {
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+        var formats = new[] { "Bitmap", "System.Drawing.Bitmap", "CanIncludeInClipboardHistory" };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            formats, hasFileDrop: false, hasImageFormat: true, settings);
+
+        Assert.True(result.isCandidate);
+        Assert.True(result.isProven);
+        Assert.Contains("CanIncludeInClipboardHistory", result.reason);
+    }
+
+    [Fact]
+    public void ClassifyClipboardFormats_AcceptsCleanStandaloneDib()
+    {
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+        var formats = new[] { "Bitmap", "DeviceIndependentBitmap" };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            formats, hasFileDrop: false, hasImageFormat: true, settings);
+
+        Assert.True(result.isCandidate);
+        Assert.True(result.isProven);
+        Assert.Contains("Standalone bitmap", result.reason);
+    }
+
+    [Fact]
     public void IsForegroundMarkupEditor_HonorsOverrideAndRecognizesEditors()
     {
         try

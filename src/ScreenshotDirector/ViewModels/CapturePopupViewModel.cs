@@ -50,6 +50,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private readonly IImageSaveService _saveService;
     private readonly INotificationService _notificationService;
     private readonly ISettingsService _settingsService;
+    private readonly ICaptureDetectionService? _detectionService;
     private readonly IAppLogger _logger;
 
     private DispatcherTimer? _countdownTimer;
@@ -67,8 +68,29 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private bool _isPointerOverWindow;
     private bool _isEditingFilename;
     private bool _isManuallyPaused;
+    private bool _isSnippingToolOpen;
     private bool _isCollapsed;
     private bool _setAsSessionDefaultOnSave;
+
+    public IImageSaveService SaveService => _saveService;
+    public INotificationService NotificationService => _notificationService;
+    public ISettingsService SettingsService => _settingsService;
+    public ICaptureDetectionService? DetectionService => _detectionService;
+    public IAppLogger Logger => _logger;
+
+    public bool IsSnippingToolOpen
+    {
+        get => _isSnippingToolOpen;
+        set
+        {
+            if (_isSnippingToolOpen != value)
+            {
+                _isSnippingToolOpen = value;
+                OnPropertyChanged();
+                UpdateTimerPausedState();
+            }
+        }
+    }
 
     public string ResolutionText => PreviewImage != null
         ? $"{PreviewImage.PixelWidth} × {PreviewImage.PixelHeight}"
@@ -205,12 +227,14 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         IImageSaveService saveService,
         INotificationService notificationService,
         ISettingsService settingsService,
-        IAppLogger logger)
+        IAppLogger logger,
+        ICaptureDetectionService? detectionService = null)
     {
         _saveService = saveService;
         _notificationService = notificationService;
         _settingsService = settingsService;
         _logger = logger;
+        _detectionService = detectionService;
     }
 
     public void Initialize(CaptureCandidate candidate)
@@ -306,11 +330,20 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private void UpdateTimerPausedState()
     {
         bool wasPaused = IsTimerPaused;
-        IsTimerPaused = _isPointerOverWindow || _isEditingFilename || _isManuallyPaused;
+        IsTimerPaused = _isPointerOverWindow || _isEditingFilename || _isManuallyPaused || _isSnippingToolOpen;
         if (wasPaused && !IsTimerPaused)
         {
             _lastTickTimestamp = Stopwatch.GetTimestamp();
         }
+    }
+
+    public void UpdatePreviewImage(BitmapSource newImage)
+    {
+        PreviewImage = newImage;
+        OnPropertyChanged(nameof(ResolutionText));
+        StatusMessage = "Screenshot updated! Choose destination or press 1-9.";
+        ResetTimeout();
+        ResumeTimer();
     }
 
     public void ExpandToFullList()
