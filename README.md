@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe"><img src="https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.4-7C3AED?style=for-the-badge&logo=windows&logoColor=white" alt="Download v1.0.4" /></a>
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases"><img src="https://img.shields.io/badge/Release-v1.0.4-8B5CF6?style=for-the-badge" alt="Release v1.0.4" /></a>
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director"><img src="https://img.shields.io/badge/Tests-73%20Passing-10B981?style=for-the-badge" alt="Tests" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe"><img src="https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.5-7C3AED?style=for-the-badge&logo=windows&logoColor=white" alt="Download v1.0.5" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases"><img src="https://img.shields.io/badge/Release-v1.0.5-8B5CF6?style=for-the-badge" alt="Release v1.0.5" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director"><img src="https://img.shields.io/badge/Tests-88%20Passing-10B981?style=for-the-badge" alt="Tests" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
 </p>
 
@@ -24,7 +24,7 @@ With a single keypress (`1`–`9`) or click, your screenshot is encoded as a los
 
 ## ⚡ Quick Download & Run (Windows 10 / 11)
 
-1. **[Download ScreenshotDirector.exe](https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe)** (starts the download immediately; always the latest version). Prefer a zip? [Download the v1.0.4 zip](https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.4/ScreenshotDirector-v1.0.4-win-x64.zip) or browse all [releases](https://github.com/diaba1445-glitch/Screenshot-Director/releases).
+1. **[Download ScreenshotDirector.exe](https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe)** (starts the download immediately; always the latest version). Prefer a zip? [Download the v1.0.5 zip](https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.5/ScreenshotDirector-v1.0.5-win-x64.zip) or browse all [releases](https://github.com/diaba1445-glitch/Screenshot-Director/releases).
 2. Run **`ScreenshotDirector.exe`** (extract it first if you downloaded the zip).
 3. **No installation required**: It runs as a self-contained single file with the .NET 8 runtime bundled in.
 
@@ -92,7 +92,7 @@ With a single keypress (`1`–`9`) or click, your screenshot is encoded as a los
 git clone https://github.com/diaba1445-glitch/Screenshot-Director.git
 cd Screenshot-Director
 
-# Run automated tests (73 unit & integration tests)
+# Run automated tests (88 unit & integration tests)
 dotnet test .\ScreenshotDirector.sln
 
 # Build and publish single-file release executable

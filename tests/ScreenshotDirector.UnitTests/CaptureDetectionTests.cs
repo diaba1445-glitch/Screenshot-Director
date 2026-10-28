@@ -146,6 +146,78 @@ public class CaptureDetectionTests : IDisposable
     }
 
     [Fact]
+    public void ClassifyClipboardFormats_RejectsImageCopiedFromPdfReader()
+    {
+        // Observed with Foxit PhantomPDF: a copied PDF image is published as a bare
+        // DIB with no HTML/RTF/OLE markers, so only the owning process identifies it.
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+        var formats = new[] { "Bitmap", "DeviceIndependentBitmap", "Format17", "System.Drawing.Bitmap" };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            formats, hasFileDrop: false, hasImageFormat: true, settings, "FoxitPhantomPDF");
+
+        Assert.False(result.isCandidate);
+        Assert.False(result.isProven);
+        Assert.Contains("FoxitPhantomPDF", result.reason);
+    }
+
+    [Fact]
+    public void ClassifyClipboardFormats_RejectsImageCopiedFromWord()
+    {
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+        var formats = new[] { "Bitmap", "DeviceIndependentBitmap" };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            formats, hasFileDrop: false, hasImageFormat: true, settings, "WINWORD.exe");
+
+        Assert.False(result.isCandidate);
+        Assert.False(result.isProven);
+    }
+
+    [Fact]
+    public void ClassifyClipboardFormats_RejectsMarkerFreeBitmapFromBrowser()
+    {
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            new[] { "Bitmap", "DeviceIndependentBitmap" },
+            hasFileDrop: false, hasImageFormat: true, settings, "chrome");
+
+        Assert.False(result.isCandidate);
+    }
+
+    [Fact]
+    public void ClassifyClipboardFormats_AcceptsCleanDibFromSnippingToolSource()
+    {
+        var settings = new AppSettings { ClipboardDetectionMode = ClipboardDetectionMode.Conservative };
+
+        var result = CaptureDetectionService.ClassifyClipboardFormats(
+            new[] { "Bitmap", "DeviceIndependentBitmap" },
+            hasFileDrop: false, hasImageFormat: true, settings, "SnippingTool");
+
+        Assert.True(result.isCandidate);
+        Assert.True(result.isProven);
+        Assert.Contains("source: SnippingTool", result.reason);
+    }
+
+    [Theory]
+    [InlineData("FoxitPhantomPDF", true)]
+    [InlineData("FoxitPhantomPDF.exe", true)]
+    [InlineData(@"C:\Program Files\Foxit\FoxitPhantomPDF.exe", true)]
+    [InlineData("WINWORD", true)]
+    [InlineData("AcroRd32.exe", true)]
+    [InlineData("msedge.exe", true)]
+    [InlineData("SnippingTool", false)]
+    [InlineData("ScreenClippingHost", false)]
+    [InlineData("ShareX", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void IsDocumentOrBrowserSource_ClassifiesProcessNames(string? processName, bool expected)
+    {
+        Assert.Equal(expected, CaptureDetectionService.IsDocumentOrBrowserSource(processName));
+    }
+
+    [Fact]
     public void IsForegroundMarkupEditor_HonorsOverrideAndRecognizesEditors()
     {
         try

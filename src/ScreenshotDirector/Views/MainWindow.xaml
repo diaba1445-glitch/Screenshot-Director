@@ -484,7 +484,7 @@
                             <TextBlock Text="GitHub Repo" FontSize="12" VerticalAlignment="Center" FontWeight="Medium"/>
                         </StackPanel>
                     </Button>
-                    <TextBlock Text="Version 1.0.4" FontSize="11" Foreground="#656277" Margin="4,0,0,0"/>
+                    <TextBlock Text="Version 1.0.5" FontSize="11" Foreground="#656277" Margin="4,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -925,7 +925,7 @@
                         <Border Background="#161422" BorderBrush="#252238" BorderThickness="1" CornerRadius="8" Padding="14">
                             <StackPanel>
                                 <TextBlock Text="Detection Policy &amp; Web Filtering" FontWeight="SemiBold" Foreground="#DDD6FE"/>
-                                <TextBlock Text="Conservative Mode filters browser image copies and Office embeddings to prevent accidental popups." 
+                                <TextBlock Text="Conservative Mode filters images copied from browsers, PDF readers, and Office documents to prevent accidental popups." 
                                            Foreground="#8E8A9F" FontSize="11" Margin="0,2,0,8" TextWrapping="Wrap"/>
                                 <CheckBox IsChecked="{Binding GenericImageFallbackEnabled}">
                                     <StackPanel Margin="6,0,0,0">

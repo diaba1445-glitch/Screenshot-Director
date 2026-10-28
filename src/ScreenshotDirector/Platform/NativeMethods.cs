@@ -97,6 +97,9 @@ public static class NativeMethods
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetClipboardOwner();
+
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
@@ -108,15 +111,40 @@ public static class NativeMethods
         {
             IntPtr hwnd = GetForegroundWindow();
             if (hwnd == IntPtr.Zero) return null;
-            GetWindowThreadProcessId(hwnd, out uint pid);
-            if (pid == 0) return null;
-            using var process = System.Diagnostics.Process.GetProcessById((int)pid);
-            return process.ProcessName;
+            return GetProcessNameForWindow(hwnd);
         }
         catch
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Returns the process name of the application that currently owns the clipboard
+    /// (i.e. the app that put the current content there). Returns null when the
+    /// owner is unavailable, which is common for some OLE/delayed-rendered copies.
+    /// </summary>
+    public static string? GetClipboardOwnerProcessName()
+    {
+        try
+        {
+            IntPtr hwnd = GetClipboardOwner();
+            if (hwnd == IntPtr.Zero) return null;
+            return GetProcessNameForWindow(hwnd);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? GetProcessNameForWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return null;
+        GetWindowThreadProcessId(hwnd, out uint pid);
+        if (pid == 0) return null;
+        using var process = System.Diagnostics.Process.GetProcessById((int)pid);
+        return process.ProcessName;
     }
 
     public static bool IsForegroundMarkupEditor()

@@ -1,6 +1,8 @@
+using System.IO;
 using System.Windows;
 using ScreenshotDirector.Core.Interfaces;
 using ScreenshotDirector.Core.Models;
+using ScreenshotDirector.Platform;
 
 namespace ScreenshotDirector.Services;
 
@@ -9,6 +11,26 @@ public class CaptureDetectionService : ICaptureDetectionService
     private readonly ISettingsService _settingsService;
     private readonly ImageCaptureService _imageCaptureService;
     private readonly IAppLogger _logger;
+
+    // Apps that commonly put ordinary document/web images on the clipboard as a
+    // plain bitmap (often with no HTML/RTF/OLE markers at all). In Conservative
+    // mode these must not be mistaken for screenshots. Process names are matched
+    // without the ".exe" extension.
+    private static readonly HashSet<string> DocumentAndBrowserProcessNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Microsoft Office and other document editors
+        "WINWORD", "EXCEL", "POWERPNT", "ONENOTE", "MSPUB", "VISIO", "WORDPAD",
+        "olk", "soffice", "wps", "wpp", "wpspdf",
+
+        // PDF readers / editors
+        "Acrobat", "AcroRd32", "AcroExch", "FoxitPhantomPDF", "FoxitReader",
+        "FoxitPDFReader", "FoxitPDFEditor", "SumatraPDF", "PDFXCview", "NitroPDF",
+        "NitroPro", "PDFXEdit", "PDF24",
+
+        // Web browsers (their PDF/image viewers can also emit marker-free bitmaps)
+        "chrome", "msedge", "MicrosoftEdge", "MicrosoftEdgeCP", "firefox", "brave",
+        "opera", "vivaldi", "iexplore", "chromium", "Arc", "waterfox", "librewolf"
+    };
 
     private readonly object _stateLock = new();
     private long _generationCounter;
@@ -269,8 +291,14 @@ public class CaptureDetectionService : ICaptureDetectionService
                                                    f.Equals("Format17", StringComparison.OrdinalIgnoreCase) || // CF_DIBV5
                                                    f.Equals("PNG", StringComparison.OrdinalIgnoreCase));
 
+            // The app that put the content on the clipboard. Some document viewers
+            // (notably Foxit and other PDF readers) copy images as a bare DIB with
+            // no identifying formats, so the owner process is the only reliable signal.
+            var ownerProcessName = NativeMethods.GetClipboardOwnerProcessName();
+            _logger.Debug($"Clipboard image inspection: owner='{ownerProcessName ?? "unknown"}', formats=[{string.Join(", ", formats)}]");
+
             var settings = _settingsService.CurrentSettings;
-            return ClassifyClipboardFormats(formats, hasFileDrop, hasImageFormat, settings);
+            return ClassifyClipboardFormats(formats, hasFileDrop, hasImageFormat, settings, ownerProcessName);
         }
         catch (Exception ex)
         {
@@ -286,7 +314,8 @@ public class CaptureDetectionService : ICaptureDetectionService
         IReadOnlyCollection<string> formats,
         bool hasFileDrop,
         bool hasImageFormat,
-        AppSettings settings)
+        AppSettings settings,
+        string? sourceProcessName = null)
     {
         // If it's a file copy (e.g. copying an existing image file from Explorer), reject
         if (hasFileDrop)
@@ -307,6 +336,17 @@ public class CaptureDetectionService : ICaptureDetectionService
             return (false, "Rejected: bitmap restored from Windows clipboard history", false);
         }
 
+        bool conservative = settings.ClipboardDetectionMode == ClipboardDetectionMode.Conservative;
+
+        // Some document viewers (notably PDF readers) publish copied images as a bare
+        // DIB with no HTML/RTF/OLE markers, making them indistinguishable from a clean
+        // screenshot by formats alone. Check the owning application as well so copying
+        // an image out of a PDF/Word document never raises the routing popup.
+        if (conservative && IsDocumentOrBrowserSource(sourceProcessName))
+        {
+            return (false, $"Rejected: image copied from document/browser app '{sourceProcessName}'", false);
+        }
+
         // Check for web browser image copy markers
         bool hasBrowserMarkers = formats.Any(f =>
             f.Equals("HTML Format", StringComparison.OrdinalIgnoreCase) ||
@@ -320,8 +360,6 @@ public class CaptureDetectionService : ICaptureDetectionService
             f.Equals("Rich Text Format", StringComparison.OrdinalIgnoreCase) ||
             f.Equals("Embed Source", StringComparison.OrdinalIgnoreCase) ||
             f.Equals("Object Descriptor", StringComparison.OrdinalIgnoreCase));
-
-        bool conservative = settings.ClipboardDetectionMode == ClipboardDetectionMode.Conservative;
 
         if (conservative)
         {
@@ -342,7 +380,7 @@ public class CaptureDetectionService : ICaptureDetectionService
 
             string reason = hasHistoryFormat
                 ? "Windows Snipping / Shell capture (CanIncludeInClipboardHistory present)"
-                : "Standalone bitmap capture (clean DIB without document/browser markers)";
+                : $"Standalone bitmap capture (clean DIB; source: {sourceProcessName ?? "unknown"})";
 
             return (true, reason, true);
         }
@@ -363,5 +401,25 @@ public class CaptureDetectionService : ICaptureDetectionService
                 return (true, "Clean image format accepted", false);
             }
         }
+    }
+
+    /// <summary>
+    /// True when the process is a document editor, PDF viewer, or browser whose
+    /// clipboard bitmaps are ordinary document/web images rather than screenshots.
+    /// </summary>
+    public static bool IsDocumentOrBrowserSource(string? processName)
+    {
+        if (string.IsNullOrWhiteSpace(processName))
+        {
+            return false;
+        }
+
+        var name = Path.GetFileName(processName.Trim());
+        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            name = name[..^4];
+        }
+
+        return DocumentAndBrowserProcessNames.Contains(name);
     }
 }

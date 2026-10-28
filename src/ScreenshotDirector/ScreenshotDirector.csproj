@@ -11,7 +11,7 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <RootNamespace>ScreenshotDirector</RootNamespace>
     <AssemblyName>ScreenshotDirector</AssemblyName>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Authors>ScreenshotDirector</Authors>
     <Product>Screenshot Director</Product>
     <Description>Lightweight native Windows screenshot routing utility</Description>
