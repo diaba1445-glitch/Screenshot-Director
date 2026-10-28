@@ -217,6 +217,29 @@ public class CaptureDetectionTests : IDisposable
         Assert.Equal(expected, CaptureDetectionService.IsDocumentOrBrowserSource(processName));
     }
 
+    [Theory]
+    [InlineData(false, "", 3600, false)]
+    [InlineData(true, "", 3600, true)]
+    [InlineData(true, "SnippingTool", 3600, false)]
+    [InlineData(true, "SnippingTool", 1, true)]
+    [InlineData(true, "SnippingTool", 60, true)]
+    [InlineData(true, "SnippingTool", 180, false)]
+    [InlineData(true, null, 3600, true)]
+    public void ShouldSuppressDuplicate_HandlesPasteRepublishAndRapidDuplicates(
+        bool seenBefore,
+        string? sourceProcessName,
+        int secondsSinceSeen,
+        bool expected)
+    {
+        var now = new DateTimeOffset(2026, 10, 28, 12, 0, 0, TimeSpan.Zero);
+        var lastSeenAt = now.AddSeconds(-secondsSinceSeen);
+
+        var result = CaptureDetectionService.ShouldSuppressDuplicate(
+            seenBefore, lastSeenAt, now, sourceProcessName);
+
+        Assert.Equal(expected, result);
+    }
+
     [Fact]
     public void IsForegroundMarkupEditor_HonorsOverrideAndRecognizesEditors()
     {

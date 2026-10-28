@@ -36,11 +36,12 @@ public class CaptureDetectionService : ICaptureDetectionService
     private long _generationCounter;
     private CancellationTokenSource? _debounceCts;
     private DateTimeOffset _suppressUntil = DateTimeOffset.MinValue;
-    private string _lastFingerprint = string.Empty;
-    private DateTimeOffset _lastFingerprintTime = DateTimeOffset.MinValue;
+    private readonly Dictionary<string, DateTimeOffset> _recentFingerprints = new(StringComparer.Ordinal);
     private bool _isPaused;
 
-    private static readonly TimeSpan DuplicateCooldown = TimeSpan.FromSeconds(2.0);
+    private static readonly TimeSpan DuplicateCooldown = TimeSpan.FromMinutes(2.0);
+    private static readonly TimeSpan FingerprintMemory = TimeSpan.FromHours(12.0);
+    private const int MaxRememberedFingerprints = 256;
     private const int DebounceDelayMs = 250;
     private const string ClipboardHistoryItemIdFormat = "ClipboardHistoryItemId";
 
@@ -173,6 +174,11 @@ public class CaptureDetectionService : ICaptureDetectionService
             _generationCounter++;
             long currentGen = _generationCounter;
 
+            // Capture the clipboard owner at event time, before the debounce delay.
+            // Some apps release/flush clipboard ownership within a few hundred ms.
+            var sourceProcessName = NativeMethods.GetClipboardOwnerProcessName();
+            var foregroundProcessName = NativeMethods.GetForegroundProcessName();
+
             // Debounce rapid events
             _debounceCts?.Cancel();
             _debounceCts = new CancellationTokenSource();
@@ -185,7 +191,7 @@ public class CaptureDetectionService : ICaptureDetectionService
                     await Task.Delay(DebounceDelayMs, token);
                     if (token.IsCancellationRequested) return;
 
-                    await ProcessClipboardEventAsync(currentGen);
+                    await ProcessClipboardEventAsync(currentGen, sourceProcessName, foregroundProcessName);
                 }
                 catch (OperationCanceledException)
                 {
@@ -199,7 +205,7 @@ public class CaptureDetectionService : ICaptureDetectionService
         }
     }
 
-    private async Task ProcessClipboardEventAsync(long expectedGen)
+    private async Task ProcessClipboardEventAsync(long expectedGen, string? sourceProcessName, string? foregroundProcessName)
     {
         lock (_stateLock)
         {
@@ -213,15 +219,18 @@ public class CaptureDetectionService : ICaptureDetectionService
         try
         {
             // Inspect clipboard formats on Dispatcher STA thread
-            var (isCandidate, provenanceReason, isProven) = await Application.Current.Dispatcher.InvokeAsync(ClassifyClipboardContent);
+            var (isCandidate, hasImage, provenanceReason, isProven) = await Application.Current.Dispatcher
+                .InvokeAsync(() => ClassifyClipboardContent(sourceProcessName, foregroundProcessName));
 
-            if (!isCandidate)
+            if (!hasImage)
             {
                 _logger.Debug($"Clipboard content rejected: {provenanceReason}");
                 return;
             }
 
-            // Capture image
+            // Extract the image even when the source is rejected. Remembering the
+            // fingerprint of rejected document images prevents a later paste from
+            // re-publishing the same image and raising a popup.
             var candidate = await _imageCaptureService.TryCaptureFromClipboardAsync(expectedGen, provenanceReason, isProven);
             if (candidate == null)
             {
@@ -238,21 +247,33 @@ public class CaptureDetectionService : ICaptureDetectionService
                     return;
                 }
 
-                // Deduplicate by fingerprint within cooldown
                 var now = DateTimeOffset.Now;
-                if (!string.IsNullOrEmpty(candidate.Fingerprint) &&
-                    candidate.Fingerprint == _lastFingerprint &&
-                    (now - _lastFingerprintTime) < DuplicateCooldown)
+                PruneRememberedFingerprints(now);
+
+                DateTimeOffset lastSeenAt = default;
+                bool seenBefore = !string.IsNullOrEmpty(candidate.Fingerprint) &&
+                                  _recentFingerprints.TryGetValue(candidate.Fingerprint, out lastSeenAt);
+
+                if (ShouldSuppressDuplicate(seenBefore, lastSeenAt, now, sourceProcessName))
                 {
-                    _logger.Debug($"Duplicate image suppressed by fingerprint within cooldown: {candidate.Fingerprint[..8]}...");
+                    _logger.Debug(
+                        $"Duplicate clipboard image suppressed (owner='{sourceProcessName ?? "unknown"}', seen {(now - lastSeenAt).TotalSeconds:F1}s ago): {ShortFingerprint(candidate.Fingerprint)}...");
                     return;
                 }
 
-                _lastFingerprint = candidate.Fingerprint;
-                _lastFingerprintTime = now;
+                if (!string.IsNullOrEmpty(candidate.Fingerprint))
+                {
+                    _recentFingerprints[candidate.Fingerprint] = now;
+                }
             }
 
-            _logger.Info($"Valid screenshot detected! Dimensions: {candidate.Width}x{candidate.Height}, Provenance: {candidate.ProvenanceReason}");
+            if (!isCandidate)
+            {
+                _logger.Debug($"Clipboard content rejected: {provenanceReason}");
+                return;
+            }
+
+            _logger.Info($"Valid screenshot detected! Dimensions: {candidate.Width}x{candidate.Height}, Provenance: {candidate.ProvenanceReason}, Fingerprint: {ShortFingerprint(candidate.Fingerprint)}");
 
             // Dispatch event to UI
             Application.Current.Dispatcher.Invoke(() =>
@@ -266,20 +287,69 @@ public class CaptureDetectionService : ICaptureDetectionService
         }
     }
 
-    public (bool isCandidate, string reason, bool isProven) ClassifyClipboardContent()
+    /// <summary>
+    /// A repeat of an image we have already handled, with no app currently owning
+    /// the clipboard, is a clipboard re-publish (typically triggered by pasting into
+    /// Word/PDF) — not a fresh screenshot. The cooldown also covers duplicate
+    /// updates from an app that still owns the clipboard.
+    /// </summary>
+    public static bool ShouldSuppressDuplicate(
+        bool seenBefore,
+        DateTimeOffset lastSeenAt,
+        DateTimeOffset now,
+        string? sourceProcessName)
+    {
+        if (!seenBefore)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(sourceProcessName))
+        {
+            return true;
+        }
+
+        return (now - lastSeenAt) < DuplicateCooldown;
+    }
+
+    private void PruneRememberedFingerprints(DateTimeOffset now)
+    {
+        var expired = _recentFingerprints
+            .Where(kv => (now - kv.Value) > FingerprintMemory)
+            .Select(kv => kv.Key)
+            .ToList();
+
+        foreach (var key in expired)
+        {
+            _recentFingerprints.Remove(key);
+        }
+
+        while (_recentFingerprints.Count >= MaxRememberedFingerprints)
+        {
+            var oldest = _recentFingerprints.OrderBy(kv => kv.Value).First().Key;
+            _recentFingerprints.Remove(oldest);
+        }
+    }
+
+    private static string ShortFingerprint(string fingerprint) =>
+        string.IsNullOrEmpty(fingerprint) ? "none" : fingerprint[..Math.Min(8, fingerprint.Length)];
+
+    public (bool isCandidate, bool hasImage, string reason, bool isProven) ClassifyClipboardContent(
+        string? sourceProcessName,
+        string? foregroundProcessName)
     {
         try
         {
             var data = Clipboard.GetDataObject();
             if (data == null)
             {
-                return (false, "DataObject is null", false);
+                return (false, false, "DataObject is null", false);
             }
 
             var formats = data.GetFormats();
             if (formats == null || formats.Length == 0)
             {
-                return (false, "No clipboard formats present", false);
+                return (false, false, "No clipboard formats present", false);
             }
 
             bool hasFileDrop = data.GetDataPresent(DataFormats.FileDrop);
@@ -291,19 +361,22 @@ public class CaptureDetectionService : ICaptureDetectionService
                                                    f.Equals("Format17", StringComparison.OrdinalIgnoreCase) || // CF_DIBV5
                                                    f.Equals("PNG", StringComparison.OrdinalIgnoreCase));
 
-            // The app that put the content on the clipboard. Some document viewers
-            // (notably Foxit and other PDF readers) copy images as a bare DIB with
-            // no identifying formats, so the owner process is the only reliable signal.
-            var ownerProcessName = NativeMethods.GetClipboardOwnerProcessName();
-            _logger.Debug($"Clipboard image inspection: owner='{ownerProcessName ?? "unknown"}', formats=[{string.Join(", ", formats)}]");
+            // File-drop content is an existing file, not a clipboard bitmap we need
+            // to remember for paste/re-publish detection.
+            bool hasImage = hasImageFormat && !hasFileDrop;
+
+            _logger.Debug(
+                $"Clipboard image inspection: owner='{sourceProcessName ?? "unknown"}', " +
+                $"foreground='{foregroundProcessName ?? "unknown"}', formats=[{string.Join(", ", formats)}]");
 
             var settings = _settingsService.CurrentSettings;
-            return ClassifyClipboardFormats(formats, hasFileDrop, hasImageFormat, settings, ownerProcessName);
+            var result = ClassifyClipboardFormats(formats, hasFileDrop, hasImageFormat, settings, sourceProcessName);
+            return (result.isCandidate, hasImage, result.reason, result.isProven);
         }
         catch (Exception ex)
         {
             _logger.Warning("Error inspecting clipboard formats", ex);
-            return (false, $"Inspection error: {ex.Message}", false);
+            return (false, false, $"Inspection error: {ex.Message}", false);
         }
     }
 
