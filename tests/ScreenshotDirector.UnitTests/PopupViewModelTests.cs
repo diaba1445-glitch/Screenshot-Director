@@ -223,7 +223,7 @@ public class PopupViewModelTests : IDisposable
             vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = bmp });
 
             Assert.Equal("32 × 32", vm.ResolutionText);
-            Assert.Equal(PopupPosition.BottomRight, vm.Position);
+            Assert.Equal(PopupPosition.TopRight, vm.Position);
         });
     }
 
@@ -398,6 +398,94 @@ public class PopupViewModelTests : IDisposable
 
             vm.ResetPointerHoverState();
             Assert.False(vm.IsTimerPaused);
+        });
+    }
+
+    [Fact]
+    public void DetailsExpansion_OpensCollapsed_ExpandsOnPointerEnter_AndCollapsesOnLeave()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            // Popup opens compact: routing details stay hidden until hover.
+            Assert.False(vm.IsDetailsExpanded);
+
+            vm.OnPointerEnterWindow();
+            Assert.True(vm.IsDetailsExpanded);
+
+            vm.OnPointerLeaveWindow();
+            Assert.False(vm.IsDetailsExpanded);
+        });
+    }
+
+    [Fact]
+    public void DetailsExpansion_StaysOpen_WhenCustomPathIsSelected()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            Assert.False(vm.IsDetailsExpanded);
+
+            // Selecting a custom path pins the drawer open, even without hover.
+            vm.IsCustomPathSelected = true;
+            Assert.True(vm.IsDetailsExpanded);
+
+            vm.OnPointerLeaveWindow();
+            Assert.True(vm.IsDetailsExpanded);
+
+            // Cancelling the custom path lets the popup collapse again.
+            vm.IsCustomPathSelected = false;
+            Assert.False(vm.IsDetailsExpanded);
+        });
+    }
+
+    [Fact]
+    public void ExpandToFullList_ExpandsDetails_AndPausesTimer()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var testFolder = Path.Combine(_tempDir, "SessionDir");
+            Directory.CreateDirectory(testFolder);
+            _settingsService.SessionDefaultPath = testFolder;
+
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            Assert.True(vm.IsCollapsed);
+            Assert.False(vm.IsDetailsExpanded);
+
+            vm.ExpandToFullList();
+
+            Assert.False(vm.IsCollapsed);
+            Assert.True(vm.IsDetailsExpanded);
+            Assert.True(vm.IsTimerPaused);
+        });
+    }
+
+    [Fact]
+    public void ResetPointerHoverState_CollapsesDetails_UnlessCustomPathIsSelected()
+    {
+        StaTestHelper.RunInSta(() =>
+        {
+            var vm = new CapturePopupViewModel(_saveService, _notificationService, _settingsService, _logger);
+            vm.Initialize(new CaptureCandidate { Generation = 1, ImageSource = CreateTestBitmap() });
+
+            vm.OnPointerEnterWindow();
+            Assert.True(vm.IsDetailsExpanded);
+
+            // Window deactivation resets hover, so the popup falls back to compact.
+            vm.ResetPointerHoverState();
+            Assert.False(vm.IsDetailsExpanded);
+
+            vm.IsCustomPathSelected = true;
+            vm.OnPointerEnterWindow();
+            vm.ResetPointerHoverState();
+
+            Assert.True(vm.IsDetailsExpanded);
         });
     }
 }

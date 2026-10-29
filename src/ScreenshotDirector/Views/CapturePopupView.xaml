@@ -440,10 +440,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/> <!-- Header with macOS Controls -->
                     <RowDefinition Height="Auto"/> <!-- Preview & Filename Card -->
-                    <RowDefinition Height="Auto"/> <!-- Error banner -->
-                    <RowDefinition Height="Auto"/> <!-- Custom Path Confirmation Drawer -->
-                    <RowDefinition Height="Auto"/> <!-- Destinations Grid -->
-                    <RowDefinition Height="Auto"/> <!-- Session Default Checkbox & Footer -->
+                    <RowDefinition Height="Auto"/> <!-- Hover-revealed details -->
                 </Grid.RowDefinitions>
 
                 <!-- Header Row: Clean Liquid Glass Header -->
@@ -738,301 +735,315 @@
                     </Grid>
                 </Border>
 
-                <!-- Error Banner -->
-                <Border Grid.Row="2" 
-                        Background="#3B181E" 
-                        BorderBrush="#7F1D1D" 
-                        BorderThickness="1" 
-                        CornerRadius="6" 
-                        Padding="10,6" 
-                        Margin="0,0,0,10"
-                        Visibility="{Binding HasError, Converter={StaticResource BoolToVisConverter}}">
-                    <TextBlock Text="{Binding ErrorMessage}" 
-                               Foreground="#FCA5A5" 
-                               FontSize="11" 
-                               TextWrapping="Wrap"/>
-                </Border>
-
-                <!-- Custom Path Confirmation Drawer (when selected via Select Path) -->
-                <Border Grid.Row="3" 
-                        CornerRadius="8" 
-                        Padding="12,10" 
-                        Margin="0,0,0,10"
-                        Visibility="{Binding IsCustomPathSelected, Converter={StaticResource BoolToVisConverter}}">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="#801A162B"/>
-                            <Setter Property="BorderBrush" Value="#3D345C"/>
-                            <Setter Property="BorderThickness" Value="1.5"/>
+                <!-- Hover-revealed details (hidden while the popup is compact) -->
+                <StackPanel Grid.Row="2">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <!-- Collapsed is also the pre-binding default so the
+                                 popup always opens at its compact height. -->
+                            <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                    <Setter Property="Background" Value="#D8FFFFFF"/>
-                                    <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                <DataTrigger Binding="{Binding IsDetailsExpanded}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </Border.Style>
-                    <StackPanel>
-                        <TextBlock Text="📁 Selected Custom Folder:" FontSize="11" FontWeight="SemiBold">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#C084FC"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Foreground" Value="#2563EB"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <TextBlock Text="{Binding SelectedCustomPath}" FontWeight="Bold" FontSize="12" Margin="0,2,0,8" TextTrimming="CharacterEllipsis">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#FFFFFF"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Foreground" Value="#0F172A"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                    </StackPanel.Style>
 
-                        <CheckBox IsChecked="{Binding AddCustomPathToPresets}" Margin="0,0,0,6">
-                            <TextBlock Text="Add this folder to presets (assign shortcut key)" FontSize="11">
+                    <!-- Error Banner -->
+                    <Border Background="#3B181E" 
+                            BorderBrush="#7F1D1D" 
+                            BorderThickness="1" 
+                            CornerRadius="6" 
+                            Padding="10,6" 
+                            Margin="0,0,0,10"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVisConverter}}">
+                        <TextBlock Text="{Binding ErrorMessage}" 
+                                   Foreground="#FCA5A5" 
+                                   FontSize="11" 
+                                   TextWrapping="Wrap"/>
+                    </Border>
+
+                    <!-- Custom Path Confirmation Drawer (when selected via Select Path) -->
+                    <Border CornerRadius="8" 
+                            Padding="12,10" 
+                            Margin="0,0,0,10"
+                            Visibility="{Binding IsCustomPathSelected, Converter={StaticResource BoolToVisConverter}}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#801A162B"/>
+                                <Setter Property="BorderBrush" Value="#3D345C"/>
+                                <Setter Property="BorderThickness" Value="1.5"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                        <Setter Property="Background" Value="#D8FFFFFF"/>
+                                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <TextBlock Text="📁 Selected Custom Folder:" FontSize="11" FontWeight="SemiBold">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#DDD6FE"/>
+                                        <Setter Property="Foreground" Value="#C084FC"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                                <Setter Property="Foreground" Value="#334155"/>
+                                                <Setter Property="Foreground" Value="#2563EB"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
-                        </CheckBox>
-
-                        <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="0,0,0,10">
-                            <TextBlock Text="Set as session default folder" FontSize="11">
+                            <TextBlock Text="{Binding SelectedCustomPath}" FontWeight="Bold" FontSize="12" Margin="0,2,0,8" TextTrimming="CharacterEllipsis">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#DDD6FE"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                                <Setter Property="Foreground" Value="#334155"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </CheckBox>
-
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="✓ Save to Folder" 
-                                    Click="OnConfirmSaveCustomPathClick"
-                                    FontWeight="Bold" FontSize="11" Padding="12,5" 
-                                    BorderThickness="0" Cursor="Hand" Margin="0,0,8,0">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="#7C3AED"/>
                                         <Setter Property="Foreground" Value="#FFFFFF"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                                <Setter Property="Background" Value="#2563EB"/>
+                                                <Setter Property="Foreground" Value="#0F172A"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Button.Style>
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="4"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
+                                </TextBlock.Style>
+                            </TextBlock>
 
-                            <Button Content="✕ Cancel" 
-                                    Click="OnCancelCustomPathClick"
-                                    FontSize="11" Padding="10,5" 
-                                    BorderThickness="1" 
-                                    Cursor="Hand">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Background" Value="#241E38"/>
-                                        <Setter Property="Foreground" Value="#8E8A9F"/>
-                                        <Setter Property="BorderBrush" Value="#3A3059"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                                <Setter Property="Background" Value="#E2E8F0"/>
-                                                <Setter Property="Foreground" Value="#475569"/>
-                                                <Setter Property="BorderBrush" Value="#CBD5E1"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="4"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
+                            <CheckBox IsChecked="{Binding AddCustomPathToPresets}" Margin="0,0,0,6">
+                                <TextBlock Text="Add this folder to presets (assign shortcut key)" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#DDD6FE"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                    <Setter Property="Foreground" Value="#334155"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </CheckBox>
+
+                            <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="0,0,0,10">
+                                <TextBlock Text="Set as session default folder" FontSize="11">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#DDD6FE"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                    <Setter Property="Foreground" Value="#334155"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </CheckBox>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="✓ Save to Folder" 
+                                        Click="OnConfirmSaveCustomPathClick"
+                                        FontWeight="Bold" FontSize="11" Padding="12,5" 
+                                        BorderThickness="0" Cursor="Hand" Margin="0,0,8,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#7C3AED"/>
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                    <Setter Property="Background" Value="#2563EB"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="4"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+
+                                <Button Content="✕ Cancel" 
+                                        Click="OnCancelCustomPathClick"
+                                        FontSize="11" Padding="10,5" 
+                                        BorderThickness="1" 
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#241E38"/>
+                                            <Setter Property="Foreground" Value="#8E8A9F"/>
+                                            <Setter Property="BorderBrush" Value="#3A3059"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                    <Setter Property="Background" Value="#E2E8F0"/>
+                                                    <Setter Property="Foreground" Value="#475569"/>
+                                                    <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="4"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Border>
+                    </Border>
 
-                <!-- Destinations 2-Column Tile Grid -->
-                <ItemsControl Grid.Row="4" ItemsSource="{Binding Destinations}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="2"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
+                    <!-- Destinations 2-Column Tile Grid -->
+                    <ItemsControl ItemsSource="{Binding Destinations}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="2"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
 
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Style="{StaticResource DestTileCardStyle}" 
-                                    Click="OnDestinationClick"
-                                    ToolTip="{Binding Path}"
-                                    IsEnabled="{Binding DataContext.IsNotSaving, RelativeSource={RelativeSource AncestorType=Window}}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource DestTileCardStyle}" 
+                                        Click="OnDestinationClick"
+                                        ToolTip="{Binding Path}"
+                                        IsEnabled="{Binding DataContext.IsNotSaving, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <!-- Keycap Number Badge -->
-                                    <Border Grid.Column="0" 
-                                            CornerRadius="6" 
-                                            Width="24" Height="24" 
-                                            HorizontalAlignment="Center" 
-                                            VerticalAlignment="Center">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background">
-                                                    <Setter.Value>
-                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                            <GradientStop Color="#7C3AED" Offset="0.0"/>
-                                                            <GradientStop Color="#6366F1" Offset="1.0"/>
-                                                        </LinearGradientBrush>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding DataContext.IsLightGlass, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                                        <Setter Property="Background">
-                                                            <Setter.Value>
-                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                                    <GradientStop Color="#3B82F6" Offset="0.0"/>
-                                                                    <GradientStop Color="#2563EB" Offset="1.0"/>
-                                                                </LinearGradientBrush>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <TextBlock Text="{Binding ShortcutNumber}" 
-                                                   Foreground="#FFFFFF" 
-                                                   FontSize="12" 
-                                                   FontWeight="Bold" 
-                                                   HorizontalAlignment="Center" 
-                                                   VerticalAlignment="Center"/>
-                                    </Border>
-
-                                    <!-- Folder Info -->
-                                    <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding DisplayIcon}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding DisplayName}" 
-                                                       FontWeight="SemiBold" 
+                                        <!-- Keycap Number Badge -->
+                                        <Border Grid.Column="0" 
+                                                CornerRadius="6" 
+                                                Width="24" Height="24" 
+                                                HorizontalAlignment="Center" 
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                <GradientStop Color="#7C3AED" Offset="0.0"/>
+                                                                <GradientStop Color="#6366F1" Offset="1.0"/>
+                                                            </LinearGradientBrush>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DataContext.IsLightGlass, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                            <Setter Property="Background">
+                                                                <Setter.Value>
+                                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                        <GradientStop Color="#3B82F6" Offset="0.0"/>
+                                                                        <GradientStop Color="#2563EB" Offset="1.0"/>
+                                                                    </LinearGradientBrush>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding ShortcutNumber}" 
+                                                       Foreground="#FFFFFF" 
                                                        FontSize="12" 
+                                                       FontWeight="Bold" 
+                                                       HorizontalAlignment="Center" 
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- Folder Info -->
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DisplayIcon}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DisplayName}" 
+                                                           FontWeight="SemiBold" 
+                                                           FontSize="12" 
+                                                           TextTrimming="CharacterEllipsis">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding DataContext.IsLightGlass, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#0F172A"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Path}" 
+                                                       FontSize="10" 
                                                        TextTrimming="CharacterEllipsis">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                        <Setter Property="Foreground" Value="#8E8A9F"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding DataContext.IsLightGlass, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                                                <Setter Property="Foreground" Value="#0F172A"/>
+                                                                <Setter Property="Foreground" Value="#64748B"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding Path}" 
-                                                   FontSize="10" 
-                                                   TextTrimming="CharacterEllipsis">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#8E8A9F"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding DataContext.IsLightGlass, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                                            <Setter Property="Foreground" Value="#64748B"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                <!-- Session Default Toggle & Timeout Footer -->
-                <StackPanel Grid.Row="5" Margin="0,10,0,0">
-                    <!-- Session Default Checkbox -->
-                    <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="2,0,0,8" ToolTip="Future screenshots in this session will auto-route to the selected folder">
-                        <TextBlock Text="📌 Remember choice as session default folder" FontSize="11">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#9CA3AF"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Foreground" Value="#475569"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </CheckBox>
+                    <!-- Session Default Toggle & Timeout Footer -->
+                    <StackPanel Margin="0,10,0,0">
+                        <!-- Session Default Checkbox -->
+                        <CheckBox IsChecked="{Binding SetAsSessionDefaultOnSave}" Margin="2,0,0,8" ToolTip="Future screenshots in this session will auto-route to the selected folder">
+                            <TextBlock Text="📌 Remember choice as session default folder" FontSize="11">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#9CA3AF"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                <Setter Property="Foreground" Value="#475569"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </CheckBox>
 
-                    <!-- Timeout Bar -->
-                    <ProgressBar Style="{StaticResource SmoothCountdownBarStyle}"
-                                 Minimum="0.0" 
-                                 Maximum="1.0" 
-                                 Value="{Binding TimeoutProgress, Mode=OneWay}"/>
+                        <!-- Timeout Bar -->
+                        <ProgressBar Style="{StaticResource SmoothCountdownBarStyle}"
+                                     Minimum="0.0" 
+                                     Maximum="1.0" 
+                                     Value="{Binding TimeoutProgress, Mode=OneWay}"/>
 
-                    <Grid Margin="0,6,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Press 1–9 or click tile to save" FontSize="11" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#8E8A9F"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Foreground" Value="#64748B"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <TextBlock Grid.Column="1" Text="Esc to dismiss" FontSize="11" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#5A5570"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
-                                            <Setter Property="Foreground" Value="#94A3B8"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Press 1–9 or click tile to save" FontSize="11" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#8E8A9F"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                <Setter Property="Foreground" Value="#64748B"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Grid.Column="1" Text="Esc to dismiss" FontSize="11" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#5A5570"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLightGlass}" Value="True">
+                                                <Setter Property="Foreground" Value="#94A3B8"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Grid>

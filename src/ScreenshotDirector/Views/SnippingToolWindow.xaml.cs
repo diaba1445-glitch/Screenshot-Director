@@ -83,6 +83,14 @@ public partial class SnippingToolWindow : Window
     {
         if (ViewModel == null) return;
 
+        // Let the inline text-annotation editor own the keyboard while it has
+        // focus: digits, Enter, Escape and Ctrl+Z/Y must edit the text instead
+        // of switching tools, closing the window or undoing annotations.
+        if (Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase)
+        {
+            return;
+        }
+
         bool isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
 
         if (isCtrl && e.Key == Key.Z)

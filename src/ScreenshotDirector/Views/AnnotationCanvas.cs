@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ScreenshotDirector.Core.Models;
 using ScreenshotDirector.ViewModels;
 
@@ -79,6 +80,7 @@ public class AnnotationCanvas : Canvas
         // If a text box is open and user clicks outside, commit it
         if (_activeTextBox != null)
         {
+            e.Handled = true;
             CommitActiveTextBox();
             return;
         }
@@ -88,6 +90,9 @@ public class AnnotationCanvas : Canvas
 
         if (ViewModel.ActiveMode == SnippingToolMode.Text)
         {
+            // Keep the ScrollViewer that hosts this canvas from focusing itself
+            // on the same click, which would immediately commit/close the box.
+            e.Handled = true;
             ShowInlineTextBox(_startPoint);
             return;
         }
@@ -246,6 +251,19 @@ public class AnnotationCanvas : Canvas
 
         Children.Add(_activeTextBox);
         _activeTextBox.Focus();
+        Keyboard.Focus(_activeTextBox);
+
+        // Focus can still be taken by a parent control after this handler
+        // returns; retry once input processing has settled.
+        var textBox = _activeTextBox;
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (ReferenceEquals(_activeTextBox, textBox) && !textBox.IsKeyboardFocusWithin)
+            {
+                textBox.Focus();
+                Keyboard.Focus(textBox);
+            }
+        }), DispatcherPriority.Input);
     }
 
     private void CommitActiveTextBox()

@@ -40,7 +40,7 @@ public class MainControlViewModel : INotifyPropertyChanged
     private bool _allowQuickRename;
     private string _defaultFilenamePattern = "Screenshot_yyyy-MM-dd_HH-mm-ss.png";
     private bool _genericImageFallbackEnabled;
-    private PopupPosition _popupPosition = PopupPosition.BottomRight;
+    private PopupPosition _popupPosition = PopupPosition.TopRight;
     private PopupThemeMode _popupThemeMode = PopupThemeMode.LightGlass;
     private DestinationEditItem? _selectedDestination;
     private string _statusMessage = string.Empty;
@@ -109,8 +109,8 @@ public class MainControlViewModel : INotifyPropertyChanged
 
     public PopupPosition[] AvailablePopupPositions => new[]
     {
-        PopupPosition.BottomRight,
         PopupPosition.TopRight,
+        PopupPosition.BottomRight,
         PopupPosition.BottomCenter,
         PopupPosition.CursorAdjacent
     };

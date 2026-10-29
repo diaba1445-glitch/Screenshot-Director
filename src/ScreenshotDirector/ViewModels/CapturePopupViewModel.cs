@@ -70,6 +70,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     private bool _isManuallyPaused;
     private bool _isSnippingToolOpen;
     private bool _isCollapsed;
+    private bool _isDetailsExpanded;
     private bool _setAsSessionDefaultOnSave;
 
     public IImageSaveService SaveService => _saveService;
@@ -96,7 +97,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         ? $"{PreviewImage.PixelWidth} × {PreviewImage.PixelHeight}"
         : string.Empty;
 
-    public PopupPosition Position => _settingsService?.CurrentSettings?.PopupPosition ?? PopupPosition.BottomRight;
+    public PopupPosition Position => _settingsService?.CurrentSettings?.PopupPosition ?? PopupPosition.TopRight;
 
     public PopupThemeMode ThemeMode => _settingsService?.CurrentSettings?.PopupThemeMode ?? PopupThemeMode.LightGlass;
     public bool IsLightGlass => ThemeMode == PopupThemeMode.LightGlass;
@@ -120,6 +121,24 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         set { _isCollapsed = value; OnPropertyChanged(); }
     }
 
+    /// <summary>
+    /// Controls the routing details (destination tiles, custom-path drawer and
+    /// footer). The popup opens compact and reveals these while the pointer
+    /// rests over it, so taking a screenshot stays out of the way by default.
+    /// </summary>
+    public bool IsDetailsExpanded
+    {
+        get => _isDetailsExpanded;
+        set
+        {
+            if (_isDetailsExpanded != value)
+            {
+                _isDetailsExpanded = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public bool HasSessionDefault => !string.IsNullOrWhiteSpace(_settingsService?.SessionDefaultPath) && Directory.Exists(_settingsService?.SessionDefaultPath);
     public string? SessionDefaultPath => _settingsService?.SessionDefaultPath;
     public string SessionDefaultFolderName => !string.IsNullOrWhiteSpace(SessionDefaultPath)
@@ -136,7 +155,17 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public bool IsCustomPathSelected
     {
         get => _isCustomPathSelected;
-        set { _isCustomPathSelected = value; OnPropertyChanged(); }
+        set
+        {
+            if (_isCustomPathSelected == value)
+            {
+                return;
+            }
+
+            _isCustomPathSelected = value;
+            OnPropertyChanged();
+            UpdateDetailsExpansion();
+        }
     }
 
     private string? _selectedCustomPath;
@@ -248,6 +277,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         _isEditingFilename = false;
         _isManuallyPaused = false;
         IsTimerPaused = false;
+        IsDetailsExpanded = false;
         SetAsSessionDefaultOnSave = false;
 
         OnPropertyChanged(nameof(HasSessionDefault));
@@ -283,6 +313,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public void OnPointerEnterWindow()
     {
         _isPointerOverWindow = true;
+        UpdateDetailsExpansion();
         UpdateTimerPausedState();
         _logger.Debug($"Pointer entered popup - countdown timer paused (remaining: {_remainingTimeMs}ms).");
     }
@@ -290,6 +321,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public void OnPointerLeaveWindow()
     {
         _isPointerOverWindow = false;
+        UpdateDetailsExpansion();
         UpdateTimerPausedState();
         _logger.Debug($"Pointer left popup - countdown timer resumed (remaining: {_remainingTimeMs}ms).");
     }
@@ -297,7 +329,17 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public void ResetPointerHoverState()
     {
         _isPointerOverWindow = false;
+        IsDetailsExpanded = IsCustomPathSelected;
         UpdateTimerPausedState();
+    }
+
+    /// <summary>
+    /// Keeps the details open while the pointer is over the popup or while the
+    /// custom-path drawer is active, and hides them otherwise.
+    /// </summary>
+    private void UpdateDetailsExpansion()
+    {
+        IsDetailsExpanded = _isPointerOverWindow || IsCustomPathSelected;
     }
 
     public void SetEditingFilename(bool isEditing)
@@ -349,6 +391,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
     public void ExpandToFullList()
     {
         IsCollapsed = false;
+        IsDetailsExpanded = true;
         PauseTimer();
     }
 
@@ -359,6 +402,7 @@ public class CapturePopupViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SessionDefaultPath));
         OnPropertyChanged(nameof(SessionDefaultFolderName));
         IsCollapsed = false;
+        IsDetailsExpanded = true;
         PauseTimer();
     }
 

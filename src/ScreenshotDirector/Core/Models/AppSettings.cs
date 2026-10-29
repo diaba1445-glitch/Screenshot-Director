@@ -70,7 +70,7 @@ public class AppSettings
 
     [JsonPropertyName("popupPosition")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PopupPosition PopupPosition { get; set; } = PopupPosition.BottomRight;
+    public PopupPosition PopupPosition { get; set; } = PopupPosition.TopRight;
 
     [JsonPropertyName("popupThemeMode")]
     [JsonConverter(typeof(JsonStringEnumConverter))]

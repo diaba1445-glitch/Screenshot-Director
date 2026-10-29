@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe"><img src="https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.6-7C3AED?style=for-the-badge&logo=windows&logoColor=white" alt="Download v1.0.6" /></a>
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases"><img src="https://img.shields.io/badge/Release-v1.0.6-8B5CF6?style=for-the-badge" alt="Release v1.0.6" /></a>
-  <a href="https://github.com/diaba1445-glitch/Screenshot-Director"><img src="https://img.shields.io/badge/Tests-95%20Passing-10B981?style=for-the-badge" alt="Tests" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe"><img src="https://img.shields.io/badge/Download-Screenshot%20Director%20v1.0.7-7C3AED?style=for-the-badge&logo=windows&logoColor=white" alt="Download v1.0.7" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director/releases"><img src="https://img.shields.io/badge/Release-v1.0.7-8B5CF6?style=for-the-badge" alt="Release v1.0.7" /></a>
+  <a href="https://github.com/diaba1445-glitch/Screenshot-Director"><img src="https://img.shields.io/badge/Tests-99%20Passing-10B981?style=for-the-badge" alt="Tests" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License" /></a>
 </p>
 
@@ -24,7 +24,7 @@ With a single keypress (`1`–`9`) or click, your screenshot is encoded as a los
 
 ## ⚡ Quick Download & Run (Windows 10 / 11)
 
-1. **[Download ScreenshotDirector.exe](https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe)** (starts the download immediately; always the latest version). Prefer a zip? [Download the v1.0.6 zip](https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.6/ScreenshotDirector-v1.0.6-win-x64.zip) or browse all [releases](https://github.com/diaba1445-glitch/Screenshot-Director/releases).
+1. **[Download ScreenshotDirector.exe](https://github.com/diaba1445-glitch/Screenshot-Director/releases/latest/download/ScreenshotDirector.exe)** (starts the download immediately; always the latest version). Prefer a zip? [Download the v1.0.7 zip](https://github.com/diaba1445-glitch/Screenshot-Director/releases/download/v1.0.7/ScreenshotDirector-v1.0.7-win-x64.zip) or browse all [releases](https://github.com/diaba1445-glitch/Screenshot-Director/releases).
 2. Run **`ScreenshotDirector.exe`** (extract it first if you downloaded the zip).
 3. **No installation required**: It runs as a self-contained single file with the .NET 8 runtime bundled in.
 
@@ -37,12 +37,13 @@ With a single keypress (`1`–`9`) or click, your screenshot is encoded as a los
   - Clean, dark violet theme matching modern productivity tools.
   - **Home**: Live listening status, quick popup test, and recent captures feed with direct `[ 📄 Open file ]` and `[ 📂 Open folder ]` actions.
   - **Presets**: Map destination folders to keys `1`–`9` with reordering, templates (`+ Screenshots`, `+ Desktop`, `+ Downloads`), and custom browse.
-  - **Popup & Routing**: Configure screen anchor positions (*BottomRight*, *TopRight*, *BottomCenter*, *CursorAdjacent*), auto-dismiss timeout, and Session Default folder.
+  - **Popup & Routing**: Configure screen anchor positions (*TopRight* default, *BottomRight*, *BottomCenter*, *CursorAdjacent*), auto-dismiss timeout, and Session Default folder.
   - **General**: Per-user Windows startup toggle (`HKCU` Run key, no admin rights required), system tray minimization, and single-instance mutex enforcement.
   - **About**: Shortcut cheat sheet and release information.
 - **Instant Routing Popup**:
 
   - Automatically triggered upon taking a screenshot with `Win + Shift + S`, Windows Snipping Tool, or `PrtScn`.
+  - Opens as a compact card (header + preview) and reveals the destination tiles, custom-path drawer and footer on hover, so it stays out of the way until you need it.
   - Keys `1`–`9` instantly save to preset destinations.
   - Key `S` opens **Select Custom Path** to route to any unlisted folder with an option to add it to presets.
   - Key `R` focuses the **Quick Rename** box and automatically pauses the dismiss timer.
@@ -92,7 +93,7 @@ With a single keypress (`1`–`9`) or click, your screenshot is encoded as a los
 git clone https://github.com/diaba1445-glitch/Screenshot-Director.git
 cd Screenshot-Director
 
-# Run automated tests (95 unit & integration tests)
+# Run automated tests (99 unit & integration tests)
 dotnet test .\ScreenshotDirector.sln
 
 # Build and publish single-file release executable

@@ -22,6 +22,9 @@ public partial class CapturePopupView : Window
     private IntPtr _escapeHotkeyWindow = IntPtr.Zero;
     private bool _escapeHotkeyRegistered;
     private SnippingToolWindow? _snippingWindow;
+    private bool _hasCursorAnchor;
+    private double _cursorAnchorLeft;
+    private double _cursorAnchorTop;
 
     public CapturePopupView()
     {
@@ -171,8 +174,7 @@ public partial class CapturePopupView : Window
         if (ViewModel.IsCustomPathSelected)
         {
             ViewModel.IsCustomPathSelected = false;
-            UpdateLayout();
-            PositionOnScreen(ViewModel.Position);
+            RefreshPosition();
         }
         else
         {
@@ -182,7 +184,13 @@ public partial class CapturePopupView : Window
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
+        bool wasExpanded = ViewModel?.IsDetailsExpanded ?? false;
         ViewModel?.ResetPointerHoverState();
+
+        if (wasExpanded && ViewModel is { IsDetailsExpanded: false })
+        {
+            RefreshPosition();
+        }
 
         // If our built-in snipping tool is currently open, keep popup open and paused
         if (ViewModel != null && ViewModel.IsSnippingToolOpen)
@@ -225,8 +233,11 @@ public partial class CapturePopupView : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        var pos = ViewModel?.Position ?? PopupPosition.BottomRight;
+        var pos = ViewModel?.Position ?? PopupPosition.TopRight;
         PositionOnScreen(pos);
+        _hasCursorAnchor = pos == PopupPosition.CursorAdjacent;
+        _cursorAnchorLeft = Left;
+        _cursorAnchorTop = Top;
 
         try
         {
@@ -248,12 +259,32 @@ public partial class CapturePopupView : Window
 
     private void OnWindowMouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
     {
-        ViewModel?.OnPointerEnterWindow();
+        if (ViewModel == null)
+        {
+            return;
+        }
+
+        bool wasExpanded = ViewModel.IsDetailsExpanded;
+        ViewModel.OnPointerEnterWindow();
+        if (!wasExpanded && ViewModel.IsDetailsExpanded)
+        {
+            RefreshPosition();
+        }
     }
 
     private void OnWindowMouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
     {
-        ViewModel?.OnPointerLeaveWindow();
+        if (ViewModel == null)
+        {
+            return;
+        }
+
+        bool wasExpanded = ViewModel.IsDetailsExpanded;
+        ViewModel.OnPointerLeaveWindow();
+        if (wasExpanded && !ViewModel.IsDetailsExpanded)
+        {
+            RefreshPosition();
+        }
     }
 
     public void AnimateClose()
@@ -286,7 +317,7 @@ public partial class CapturePopupView : Window
         PositionOnScreen(PopupPosition.CursorAdjacent);
     }
 
-    public void PositionOnScreen(PopupPosition position = PopupPosition.BottomRight)
+    public void PositionOnScreen(PopupPosition position = PopupPosition.TopRight)
     {
         try
         {
@@ -384,6 +415,69 @@ public partial class CapturePopupView : Window
         var workArea = SystemParameters.WorkArea;
         Left = workArea.Left + (workArea.Width - Width) / 2;
         Top = workArea.Top + (workArea.Height - 350) / 2;
+    }
+
+    /// <summary>
+    /// Repositions the popup after it grew or shrank, so an expanded popup
+    /// always fits on screen and a collapsed one returns to its anchor.
+    /// </summary>
+    private void RefreshPosition()
+    {
+        UpdateLayout();
+
+        var position = ViewModel?.Position ?? PopupPosition.TopRight;
+        if (position != PopupPosition.CursorAdjacent || !_hasCursorAnchor)
+        {
+            PositionOnScreen(position);
+            return;
+        }
+
+        // A cursor-adjacent popup must not chase the pointer when it resizes;
+        // restore the anchor captured at open time and keep it on-screen.
+        Left = _cursorAnchorLeft;
+        Top = _cursorAnchorTop;
+        ClampToWorkArea();
+    }
+
+    private void ClampToWorkArea()
+    {
+        try
+        {
+            NativeMethods.POINT pt;
+            IntPtr monitor = NativeMethods.GetCursorPos(out pt)
+                ? NativeMethods.MonitorFromPoint(pt, NativeMethods.MONITOR_DEFAULTTONEAREST)
+                : IntPtr.Zero;
+
+            var mi = new NativeMethods.MONITORINFO
+            {
+                cbSize = Marshal.SizeOf<NativeMethods.MONITORINFO>()
+            };
+
+            if (monitor == IntPtr.Zero || !NativeMethods.GetMonitorInfo(monitor, ref mi))
+            {
+                return;
+            }
+
+            var dpi = VisualTreeHelper.GetDpi(this);
+            double workLeft = mi.rcWork.Left / dpi.DpiScaleX;
+            double workTop = mi.rcWork.Top / dpi.DpiScaleY;
+            double workRight = workLeft + mi.rcWork.Width / dpi.DpiScaleX;
+            double workBottom = workTop + mi.rcWork.Height / dpi.DpiScaleY;
+
+            double popupWidth = ActualWidth > 0 ? ActualWidth : Width;
+            double popupHeight = ActualHeight > 0 ? ActualHeight : 380;
+
+            const double Edge = 10.0;
+
+            if (Left < workLeft + Edge) Left = workLeft + Edge;
+            if (Top < workTop + Edge) Top = workTop + Edge;
+            if (Left + popupWidth > workRight - Edge) Left = Math.Max(workLeft + Edge, workRight - popupWidth - Edge);
+            if (Top + popupHeight > workBottom - Edge) Top = Math.Max(workTop + Edge, workBottom - popupHeight - Edge);
+        }
+        catch
+        {
+            // Positioning is best-effort and must never block the popup.
+        }
     }
 
     private async void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -497,8 +591,7 @@ public partial class CapturePopupView : Window
         if (ViewModel != null)
         {
             ViewModel.ExpandToFullList();
-            UpdateLayout();
-            PositionOnScreen(ViewModel.Position);
+            RefreshPosition();
         }
     }
 
@@ -507,8 +600,7 @@ public partial class CapturePopupView : Window
         if (ViewModel != null)
         {
             ViewModel.ClearSessionDefault();
-            UpdateLayout();
-            PositionOnScreen(ViewModel.Position);
+            RefreshPosition();
         }
     }
 
@@ -531,8 +623,7 @@ public partial class CapturePopupView : Window
             {
                 ViewModel.SelectedCustomPath = dialog.SelectedPath;
                 ViewModel.IsCustomPathSelected = true;
-                UpdateLayout();
-                PositionOnScreen(ViewModel.Position);
+                RefreshPosition();
             }
         }
         finally
@@ -557,8 +648,7 @@ public partial class CapturePopupView : Window
         if (ViewModel != null)
         {
             ViewModel.IsCustomPathSelected = false;
-            UpdateLayout();
-            PositionOnScreen(ViewModel.Position);
+            RefreshPosition();
         }
     }
 
@@ -635,6 +725,14 @@ public partial class CapturePopupView : Window
             else
             {
                 ViewModel.ResumeTimer();
+            }
+
+            // The editor covered the popup, so no MouseEnter was raised while
+            // it was open. Re-expand the tiles if the pointer is already here.
+            if (IsMouseOver)
+            {
+                ViewModel.OnPointerEnterWindow();
+                RefreshPosition();
             }
 
             ResumeEscapeHotkey();
